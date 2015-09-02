@@ -1,18 +1,23 @@
+/* OBS:
+ - Pode-se gerar soh 8 numeros?
+ - Pode ter numeros repetidos?
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int    randsingular (int *vet, int size, int edge);     /* gera individuo aleatorio, sem repeticao de inteiros */
-int contain (int* vet, int element, int size);
-char** initEvalAuxVector (char* A, char* B, char* C); 	/* Esse eh aquele vetor de letras nao repetidas */
+int    randsingular (int *vet, int size, int edge);   /* gera individuo aleatorio, sem repeticao de inteiros */
+int    contain (int* vet, int element, int size);
+char** initEvalAuxVector (char* A, char* B, char* C); /* Esse eh aquele vetor de letras nao repetidas */
 int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = C */
-void imprimeVet(int* vet, int size);
+void   imprimeVet(int* vet, int size);
 
 int main(int argc, char** argv) {
   int**  population;
   int    population_size = 50;
   int    domain_size = 10;
-  int    i;
+  int    i, acc;
   char** map;
 
   srand(time(NULL));
@@ -28,9 +33,14 @@ int main(int argc, char** argv) {
   for(i = 0; i < population_size; ++i) {
     population[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
     randsingular(population[i], domain_size, 10);
-    imprimeVet(population[i], 10);
   }
-  
+
+  acc = 0;
+  for (i = 0; i < population_size; ++i) {
+    acc += population[i][10] = evalAplusBequalC (population[i]);
+    population[i][11] = acc;
+    imprimeVet(population[i], 12);
+  }  
   
   return 0;
 }
@@ -74,6 +84,22 @@ char** initEvalAuxVector (char* A, char* B, char* C) {
   map[1] = (char*) malloc (size * sizeof(char));
 
   free(temp);
+}
+
+int evalAplusBequalC (int *vet) {
+  /* *********** */
+  /* IMPROVISADA */
+  /* *********** */
+  int A, B, C;
+  A =  vet[0] * 1000 + vet[1] * 100 + vet[2] * 10 + vet[3];
+  B =  vet[4] * 1000 + vet[5] * 100 + vet[6] * 10 + vet[1];
+  C =  vet[4] * 10000 + vet[5] * 1000 + vet[2] * 100 + vet[1] * 10 + vet[7];
+
+  if (A + B == C) {
+    printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n");
+  }
+
+  return 100000 - (C - A + B);
 }
 
 void imprimeVet(int* vet, int size) {
