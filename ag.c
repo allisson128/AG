@@ -14,11 +14,14 @@ int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = 
 void   imprimeVet(int* vet, int size);
 
 int main(int argc, char** argv) {
+
   int**  population;
   int    population_size = 50;
+  int    numero_geracoes = 100;
   int    domain_size = 10;
-  int    i, acc;
-  char** map;
+  float  taxacross = .6, taxamut = .02;
+  int    i, j, acc,it;
+  /* char** map; */
 
   srand(time(NULL));
 
@@ -27,21 +30,34 @@ int main(int argc, char** argv) {
     exit(1);
   }
 
-  /* map = initEvalAuxVector (argv[1], argv[2], argv[3]); */
 
+  /* GERA POPULACAO */
   population = (int**) malloc (population_size * sizeof(int *));
   for(i = 0; i < population_size; ++i) {
     population[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
     randsingular(population[i], domain_size, 10);
   }
 
-  acc = 0;
-  for (i = 0; i < population_size; ++i) {
-    acc += population[i][10] = evalAplusBequalC (population[i]);
-    population[i][11] = acc;
-    imprimeVet(population[i], 12);
-  }  
+  for (j = 0; j < numero_geracoes; ++j) {
+
+    /* ATRIBUI NOTAS */
+    acc = 0;
+    for (i = 0; i < population_size; ++i) {
+      acc += population[i][10] = evalAplusBequalC (population[i]);
+      population[i][11] = acc;
+      imprimeVet(population[i], 12);
+    }
   
+    
+    /* CROSSOVER */
+    /* Roleta */
+
+    for (it = 0; it < taxacross * population_size; it++) {
+      
+    }
+    
+    /* MUTACAO */
+  }
   return 0;
 }
 
@@ -99,7 +115,7 @@ int evalAplusBequalC (int *vet) {
     printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n");
   }
 
-  return 100000 - (C - A + B);
+  return 100000 - abs(C - A + B);
 }
 
 void imprimeVet(int* vet, int size) {
@@ -110,3 +126,7 @@ void imprimeVet(int* vet, int size) {
   }
   putchar('\n');
 }
+
+/* RASCUNHO:
+   map = initEvalAuxVector (argv[1], argv[2], argv[3]); 
+ */
