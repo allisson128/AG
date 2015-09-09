@@ -11,6 +11,7 @@ int    randsingular (int *vet, int size, int edge);   /* gera individuo aleatori
 int    contain (int* vet, int element, int size);     /* verifica se ha o elemeento no vetor */
 char** initEvalAuxVector (char* A, char* B, char* C); /* Esse eh aquele vetor de letras nao repetidas */
 int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = C */
+int    roulette(int** population, int populationsize, int col, int value);
 void   imprimeVet(int* vet, int size);
 
 int main(int argc, char** argv) {
@@ -19,12 +20,12 @@ int main(int argc, char** argv) {
   int    newpopulationsize, populationsize = 50;
   int    numero_geracoes = 100;
   int    domain_size = 10;
-  float  crossoverrate = .6, mutationrate = .02;
+  float  crossoverrate = .05, mutationrate = .02;
   int    i, j, acc,it;
   /* char** map; */
 
   newpopulationsize = populationsize * crossoverrate;
-
+  printf("\nnewPopSize = %d\n", newpopulationsize);
   srand(time(NULL));
 
   /* if (argc != 4) { */
@@ -37,7 +38,7 @@ int main(int argc, char** argv) {
   originalpopulation = (int**) malloc (populationsize * sizeof(int *));
   newpopulation = (int**) malloc (populationsize * sizeof(int *));
   for(i = 0; i < populationsize; ++i) {
-    newpopulation[i] = NULL;
+    newpopulation[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
     originalpopulation[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
     randsingular(originalpopulation[i], domain_size, 10);
   }
@@ -52,12 +53,17 @@ int main(int argc, char** argv) {
 
   for (j = 0; j < numero_geracoes; ++j) {
 
-  
     /* CROSSOVER */
     /* Roleta */
 
-    for (it = 0; it < crossoverrate * populationsize; it++) {
-      
+    for (it = 0; it < newpopulationsize; it++) {
+      /* SELECAO */
+      int pai1 = roulette(originalpopulation, populationsize, 11, acc);
+      int pai2 = roulette(originalpopulation, populationsize, 11, acc);
+      printf("\nRoleta - pos: %d", pai1);
+      printf("\nRoleta - pos: %d", pai2);
+      putchar('\n');
+      putchar('\n');
     }
     
     /* MUTACAO */
@@ -122,6 +128,22 @@ int evalAplusBequalC (int *vet) {
   return 100000 - abs(C - A + B);
 }
 
+int roulette(int** population, int populationsize, int col, int value) {
+  /* ### ROLETA ### 
+   * INPUT:  recebe a matriz Populacao, seu tamanho, a coluna das avalicoes acumuladas e o valor total de fichas distribuidas;
+   * OUTPUT: retorna o individuo da ficha que foi sorteada;  
+   */
+  int i, token;
+  int rnd = rand() % value;
+
+  for (i = 0; i < populationsize; ++i) {
+    if (rnd < population[i][col]) {
+      return i;
+    }
+  }
+  return --i;
+}
+
 void imprimeVet(int* vet, int size) {
   int i;
   putchar('\n');
@@ -130,6 +152,8 @@ void imprimeVet(int* vet, int size) {
   }
   putchar('\n');
 }
+
+
 
 /* RASCUNHO:
    map = initEvalAuxVector (argv[1], argv[2], argv[3]); 
