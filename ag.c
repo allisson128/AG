@@ -8,51 +8,55 @@
 #include <string.h>
 
 int    randsingular (int *vet, int size, int edge);   /* gera individuo aleatorio, sem repeticao de inteiros */
-int    contain (int* vet, int element, int size);
+int    contain (int* vet, int element, int size);     /* verifica se ha o elemeento no vetor */
 char** initEvalAuxVector (char* A, char* B, char* C); /* Esse eh aquele vetor de letras nao repetidas */
 int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = C */
 void   imprimeVet(int* vet, int size);
 
 int main(int argc, char** argv) {
 
-  int**  population;
-  int    population_size = 50;
+  int**  originalpopulation, **newpopulation;
+  int    newpopulationsize, populationsize = 50;
   int    numero_geracoes = 100;
   int    domain_size = 10;
-  float  taxacross = .6, taxamut = .02;
+  float  crossoverrate = .6, mutationrate = .02;
   int    i, j, acc,it;
   /* char** map; */
 
+  newpopulationsize = populationsize * crossoverrate;
+
   srand(time(NULL));
 
-  if (argc != 4) {
-    printf("Error! Invalid number of args.\n");
-    exit(1);
-  }
+  /* if (argc != 4) { */
+  /*   printf("Error! Invalid number of args.\n"); */
+  /*   exit(1); */
+  /* } */
 
 
   /* GERA POPULACAO */
-  population = (int**) malloc (population_size * sizeof(int *));
-  for(i = 0; i < population_size; ++i) {
-    population[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
-    randsingular(population[i], domain_size, 10);
+  originalpopulation = (int**) malloc (populationsize * sizeof(int *));
+  newpopulation = (int**) malloc (populationsize * sizeof(int *));
+  for(i = 0; i < populationsize; ++i) {
+    newpopulation[i] = NULL;
+    originalpopulation[i] = (int*) malloc ((domain_size + 2) * sizeof(int));
+    randsingular(originalpopulation[i], domain_size, 10);
+  }
+
+  /* ATRIBUI NOTAS - Avalia populacao inicial */
+  acc = 0;
+  for (i = 0; i < populationsize; ++i) {
+    acc += originalpopulation[i][10] = evalAplusBequalC (originalpopulation[i]);
+    originalpopulation[i][11] = acc;
+    imprimeVet(originalpopulation[i], 12);
   }
 
   for (j = 0; j < numero_geracoes; ++j) {
 
-    /* ATRIBUI NOTAS */
-    acc = 0;
-    for (i = 0; i < population_size; ++i) {
-      acc += population[i][10] = evalAplusBequalC (population[i]);
-      population[i][11] = acc;
-      imprimeVet(population[i], 12);
-    }
   
-    
     /* CROSSOVER */
     /* Roleta */
 
-    for (it = 0; it < taxacross * population_size; it++) {
+    for (it = 0; it < crossoverrate * populationsize; it++) {
       
     }
     
