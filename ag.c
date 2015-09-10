@@ -11,11 +11,14 @@
 
 int    randsingular (int *vet, int size, int edge);   /* gera individuo aleatorio, sem repeticao de inteiros */
 int    contain (int* vet, int element, int size);     /* verifica se ha o elemeento no vetor */
+void   copy (int* vet1, int* vet2, int size);
 char** initEvalAuxVector (char* A, char* B, char* C); /* Esse eh aquele vetor de letras nao repetidas */
 int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = C */
 int    roulette(int** population, int populationsize, int col, int value);
 void   imprimeVet(int* vet, int size);
 int**  init_population(int individual_size);
+void   crossover_simple(int** newpopulation, int it, int** originalpopulation, int index_pai1, int index_pai2);
+void   permutation(int** newpopulation, int newpopulationsize, float mutationrate);
 
 int main(int argc, char** argv) {
 
@@ -23,8 +26,8 @@ int main(int argc, char** argv) {
   
   // CONSTANTES
   int    newpopulationsize, populationsize = 50;
-  float  crossoverrate = .05, mutationrate = .02;
-  int    numero_geracoes = 100;
+  float  crossoverrate = .2, mutationrate = .02;
+  int    numero_geracoes = 1;
 
   // Tentar fazer generico
   int    domain_size = 10;
@@ -53,7 +56,7 @@ int main(int argc, char** argv) {
   for (i = 0; i < populationsize; ++i) {
     acc += originalpopulation[i][10] = evalAplusBequalC (originalpopulation[i]);
     originalpopulation[i][11] = acc;
-    imprimeVet(originalpopulation[i], 12);
+    //imprimeVet(originalpopulation[i], 12);
   }
 
   for (j = 0; j < numero_geracoes; ++j) {
@@ -63,15 +66,55 @@ int main(int argc, char** argv) {
 
     for (it = 0; it < newpopulationsize; it++) {
       /* SELECAO */
-      int pai1 = roulette(originalpopulation, populationsize, 11, acc);
-      int pai2 = roulette(originalpopulation, populationsize, 11, acc);
-      /* printf("\nRoleta - pos: %d", pai1); */
-      /* printf("\nRoleta - pos: %d", pai2); */
-      /* putchar('\n'); */
-      /* putchar('\n'); */
+      int index_pai1 = roulette(originalpopulation, populationsize, 11, acc);
+      int index_pai2 = roulette(originalpopulation, populationsize, 11, acc);
+
+      crossover_simple(newpopulation, it, originalpopulation, index_pai1, index_pai2);
+      // imprimeVet(originalpopulation[index_pai1], 10);
+      // imprimeVet(originalpopulation[index_pai2], 10);
+      // imprimeVet(newpopulation[2*it], 10);
+      // imprimeVet(newpopulation[2*it+1], 10);
+      // putchar('\n');
     }
 		
     /* MUTACAO */
+    permutation(newpopulation, newpopulationsize, mutationrate);
+
+  	/* ATRIBUI NOTAS - Avalia populacao de filhos */
+  	acc = 0;
+  	for (i = 0; i < newpopulationsize; ++i) {
+    	acc += newpopulation[i][10] = evalAplusBequalC (newpopulation[i]);
+    	newpopulation[i][11] = acc;
+    	imprimeVet(newpopulation[i], 12);
+  	}
+  	
+    int** temp = init_population(10);
+    for(i = 0; i < 50; i++) {
+
+      int valor_maior = -1, maior = 0,x,y, matrix = 0;
+
+      for(x = 0; x < populationsize; ++x) {
+        if(originalpopulation[x][10] > valor_maior) {
+            maior = x;
+            matrix = 0;
+            valor_maior = originalpopulation[maior][10];
+        }
+      }
+
+      for(y = 0; y < newpopulationsize; ++y) {
+        if(newpopulation[y][10] > valor_maior){
+            maior = y;
+            matrix = 1;
+            valor_maior = newpopulation[y][10];
+        }
+      }
+
+      if(matrix)
+        copy(temp[i], newpopulation[maior], 12);
+      else
+        copy(temp[i], originalpopulation[maior], 12);
+    }
+
   }
   return 0;
 }
@@ -97,6 +140,14 @@ int contain (int* vet, int element, int size) {
     ++i;
   }
   return 0;
+}
+
+void copy (int* destino, int* origem, int size) {
+  int i;
+  for (i = 0; i < size; ++i) {
+    destino[i] = origem[i];
+  }
+
 }
 
 char** initEvalAuxVector (char* A, char* B, char* C) {
@@ -130,7 +181,7 @@ int evalAplusBequalC (int *vet) {
     printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n");
   }
 
-  return 100000 - abs(C - A + B);
+  return abs(C - A + B);
 }
 
 int roulette(int** population, int populationsize, int col, int value) {
@@ -139,7 +190,8 @@ int roulette(int** population, int populationsize, int col, int value) {
    * OUTPUT: retorna o individuo da ficha que foi sorteada;  
    */
   int i, token;
-  int rnd = rand() % value;
+  int random = rand() * 999;
+  int rnd = random % value;
 
   for (i = 0; i < populationsize; ++i) {
     if (rnd < population[i][col]) {
@@ -170,8 +222,34 @@ int** init_population(int individual_size) {
   return temp;
 }
 
+void crossover_simple(int** newpopulation, int it, int** originalpopulation, int index_pai1, int index_pai2) {
+	int i, corte = rand() % 10;
+	it *= 2;
+	for (i = 0; i < corte; ++i) {
+		newpopulation[it][i] = originalpopulation[index_pai1][i];
+		newpopulation[it + 1][i] = originalpopulation[index_pai2][i];
+	}
+	for (i = corte; i < 10; ++i) {
+		newpopulation[it][i] = originalpopulation[index_pai2][i];
+		newpopulation[it + 1][i] = originalpopulation[index_pai1][i];
+	}
+}
 
+void permutation(int** newpopulation, int newpopulationsize, float mutationrate) {
+	int i, aux, qtd = (int) newpopulationsize * mutationrate;
+	int rnd, rnd1, rnd2;
 
+	for (i = 0; i < qtd; ++i) {
+		rnd  = rand() % newpopulationsize;
+		rnd1 = rand() % 10;
+		rnd2 = rand() % 10;
+
+		aux = newpopulation[rnd][rnd1];
+		newpopulation[rnd][rnd1] = newpopulation[rnd][rnd2];
+		newpopulation[rnd][rnd2] = aux;
+	}
+
+}
 /* RASCUNHO:
    map = initEvalAuxVector (argv[1], argv[2], argv[3]); 
 */
