@@ -2,17 +2,39 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define INITIAL_POPULATION 50
+
 int size_of_string(char* string);
 int parameters_validation(int argc, char* argv[]);
 char* compact(char* str);
 char* individual_key_vector(char *key1, char *key2, char *key3);
 
+typedef struct individual {
+	char* values;
+	int * key;
+	int total_sum;
+}Individual;
+
+Individual population[INITIAL_POPULATION];
+char* key;
+
 int main(int argc, char* argv[])
 {
+	int i = 0;
+
 	if(!parameters_validation(argc, argv))
 		return 0;
 
-	printf("Key without repetition: %s", individual_key_vector(argv[1], argv[2], argv[3]));
+	key = individual_key_vector(argv[1], argv[2], argv[3]);
+
+	printf("%s", key);
+
+	printf("Criando uma chave para: ");
+	for(i = 0; key[i] != '\0'; i++)
+	{
+		printf("%c", key[i]);
+	}
+	printf("\n");
 
 	return 1;
 }
@@ -69,7 +91,7 @@ int parameters_validation(int argc, char* argv[])
 char* individual_key_vector(char *key1, char *key2, char *key3)
 {
 	int size1, size2, size3;
-	char* values;
+	char* temp;
 
 	size1 = size_of_string(key1);
 	size2 = size_of_string(key2);
@@ -78,33 +100,45 @@ char* individual_key_vector(char *key1, char *key2, char *key3)
 	if(!size1 || !size2 || !size3)
 		return NULL;
 
-	values = (char *)malloc(sizeof(char) * (size1 + size2 + size3));
+	temp = (char *)malloc(sizeof(char) * (size1 + size2 + size3));
 
-	strcpy(values, key1);
-	strcat(values, key2);
-	strcat(values, key3);
+	strcpy(temp, key1);
+	strcat(temp, key2);
+	strcat(temp, key3);
 	
-	return compact(values);
+	return compact(temp);
 }
 
 char* compact(char* str)
 {
-    int len = strlen(str);
-    int a[26], i, j;
-    char temp[len];
+	int len = strlen(str);
+	int alphabet[26];
+	int find, i=0, j=0;
+	char temp[len];
+	char *temp2;
 
-    for(i = 0, j = 0; i < len; i++)
-    {
-        int t = (int)str[i] - 65;
+	while(str[i] != '\0')
+	{
+		find = str[i] - 'a';
 
-         if(a[t]!=1)
-         {
-         	temp[j] = str[i];
-         	j++;
-         }
-            
-        a[t] = 1;
-    }
+		if(alphabet[find] != 1)
+		{
+			alphabet[find] = 1;
+			temp[j] = str[i];
+			j++;
+		}
 
-    return temp;
+		i++;
+	}
+
+	temp2 = (char *)malloc(sizeof(char) * j);
+
+	for(i = 0; i < j; i++)
+	{
+		temp2[i] = temp[i];
+	}
+
+	temp2[j] = '\0';
+
+	return temp2;
 }
