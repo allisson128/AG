@@ -15,13 +15,14 @@ int    contain (int* vet, int element, int size);     /* verifica se ha o elemee
 void   copy (int* destino, int* origem, int size);
 char** initEvalAuxVector (char* A, char* B, char* C); /* Esse eh aquele vetor de letras nao repetidas */
 int    evalAplusBequalC (int *vet);                   /* func. de aval. A + B = C */
-int    roulette(int** population, int populationsize, int col, int value);
+int    roulette(int** population, int populationsize, int col, int base, int value);
 int    tournament (int** population, int populationsize, int tour);
 void   imprimeVet(int* vet, int size);
 int**  init_population(int individual_size, int population_size);
-void   crossover_simple(int** newpopulation, int it, int** originalpopulation, int index_pai1, int index_pai2);
-void   permutation(int** newpopulation, int newpopulationsize, float mutationrate);
-void   pmx(int* parent1, int* parent2, int* son1, int* son2, int vector_size, int p1, int p2);
+void   crossover_simple (int** newpopulation, int it, int** originalpopulation, int index_pai1, int index_pai2);
+void   pmx (int** parent, int pai1, int pai2, int vector_size, int** son, int it);
+void   permutation (int** newpopulation, int newpopulationsize, float mutationrate);
+
 
 
 //(tamanho_da_populacao, nro_de_geracoes, pcross, pmut, S, C, M, semente)
@@ -41,7 +42,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
 
   newpopulationsize = populationsize * crossoverrate;
 
-  srand( (unsigned int) (semente < 0 ? time(NULL) : semente) );
+  /* srand( (unsigned int) (semente < 0 ? time(NULL) : semente) ); */
+  srand(time(NULL));
 
   /* if (argc != 4) { */
   /*   printf("Error! Invalid number of args.\n"); */
@@ -57,6 +59,7 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
   }
 
   /* ATRIBUI NOTAS - Avalia populacao inicial */
+  int base;
   acc = 0;
   for (i = 0; i < populationsize; ++i) {
     acc += originalpopulation[i][domain_size] = evalAplusBequalC (originalpopulation[i]);
@@ -68,18 +71,19 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     originalpopulation[i][11] = acc;
     //imprimeVet(originalpopulation[i], 12);
   }
-
+  base = originalpopulation[0][11];
+  //getchar();
   // LASSO
   int index_pai1, index_pai2;
   for (j = 0; (j < numero_geracoes) && (optimal < 0); ++j) {
     
-    for (it = 0; it < newpopulationsize; it++) {
+    for (it = 0; it < newpopulationsize / 2; it++) {
 
       //*************************** SELECAO ******************************
       if (S == 1) {
 	// Roleta 
-	index_pai1 = roulette (originalpopulation, populationsize, domain_size - 1, acc);
-	index_pai2 = roulette (originalpopulation, populationsize, domain_size - 1, acc);
+	index_pai1 = roulette (originalpopulation, populationsize, domain_size + 1, base, acc);
+	index_pai2 = roulette (originalpopulation, populationsize, domain_size + 1, base, acc);
       }
       else if (S == 2) {
 	// Torneio Simples
@@ -87,16 +91,26 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
 	index_pai2 = tournament (originalpopulation, populationsize, tour);
       }
       //******************************************************************
-
+      printf("\n%d",index_pai1);
+      printf("\n%d",index_pai2);
       /*************************** CROSSOVER ******************************/
-      crossover_simple(newpopulation, it, originalpopulation, index_pai1, index_pai2);
+
+      //Ciclico
+      if (C == 1) {
+	crossover_simple(newpopulation, it, originalpopulation, index_pai1, index_pai2);
+      }
+      if (C == 2) {
+	pmx(originalpopulation, index_pai1, index_pai2, domain_size, newpopulation, it);
+      }
       /********************************************************************/
 
       /* imprimeVet(originalpopulation[index_pai1], 10); */
       /* imprimeVet(originalpopulation[index_pai2], 10); */
+      /* putchar('\n'); */
       /* imprimeVet(newpopulation[2*it], 10); */
       /* imprimeVet(newpopulation[2*it+1], 10); */
       /* putchar('\n'); */
+      /* getchar(); */
     }
 		
     /*************************** MUTACAO ******************************/
@@ -116,7 +130,7 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
 
     int** temp = init_population(domain_size, populationsize);
     //init_population(10);
-    for(i = 0; i < 50; i++) {
+    for(i = 0; i < populationsize; i++) {
 
       int x, y, valor_maior = -1, maior = 0, matrix = 0;
 
@@ -243,20 +257,26 @@ int evalAplusBequalC (int *vet) {
   return EVAL_REFERENCE - abs(C - (A + B));
 }
 
-int roulette (int** population, int populationsize, int col, int value) {
+int roulette (int** population, int populationsize, int col, int base, int value) {
   /* ### ROLETA ### 
    * INPUT:  recebe a matriz Populacao, seu tamanho, a coluna das avalicoes acumuladas e o valor total de fichas distribuidas;
    * OUTPUT: retorna o individuo da ficha que foi sorteada;  
    */
   int i, token;
-  int random = rand() * 999;
-  int rnd = random % value;
+  int rnd = (rand() + base ) % value;
+  /* (rnd < 0) ? rnd *= -1 : rnd; */
 
+  /* printf("\ncol = %d",col); */
+  /* printf("\nbase = %d",base); */
+  /* printf("\nacc = %d",value); */
+  /* printf("\nrnd = %d",rnd); */
   for (i = 0; i < populationsize; ++i) {
     if (rnd < population[i][col]) {
       return i;
     }
   }
+  /* printf("\ni = %d",--i); */
+  /* getchar(); */
   return --i;
 }
 
@@ -328,6 +348,77 @@ void permutation(int** newpopulation, int newpopulationsize, float mutationrate)
    map = initEvalAuxVector (argv[1], argv[2], argv[3]); 
 */
 
+void pmx(int** parent, int pai1, int pai2, int vector_size, int** son, int it) {
+
+  int count1, count2, aux, i, j;
+  int conflict[vector_size][2];
+  
+  int p1 = rand () % vector_size;
+  int p2 = rand () % vector_size;
+
+  if (p1 > p2) {
+    aux = p1;
+    p1 = p2;
+    p2 = aux;
+  }
+
+  it *= 2;
+
+  for (i = 0; i < vector_size; i++) {
+    if (i >= p1 && i <= p2) {
+      son[it][i] = parent[pai2][i];
+      son[it + 1][i] = parent[pai1][i];
+    }
+    else {
+      son[it][i] = parent[pai1][i];
+      son[it + 1][i] = parent[pai2][i];
+    }
+  }
+
+  count1 = count2 = 0;
+
+  for (i = 0; i < p1; i++) {
+    if (contain (&son[it][pai1], son[it][i],p2-p1)) {
+      conflict [0][count1++] = i;
+    }
+
+    if (contain (&son[it + 1][pai1], son[it + 1][i],p2-p1)) {
+      conflict [1][count2++] = i;
+    }
+  }
+
+  for (i = p2+1; i < vector_size; i++) {
+    if (contain (&son[it][pai1], son[it][i],p2-p1)) {
+      conflict [0][count1++] = i;
+    }
+
+    if (contain (&son[it + 1][pai1], son[it + 1][i],p2-p1)) {
+      conflict [1][count2++] = i;
+    }
+  }
+
+  imprimeVet(parent[pai1], vector_size);
+  imprimeVet(parent[pai2], vector_size);
+
+
+  printf("\np1 = %d", p1);
+  printf("\np2 = %d", p2);
+  imprimeVet(conflict[0], count1);
+  imprimeVet(conflict[1], count1);
+  for(i = 0; i < count1; i++) {
+    
+    aux = son[it][conflict[i][0]];
+    son[it][conflict[0][i]] = son[it + 1][conflict[1][i]];
+    son[it + 1][conflict[1][i]] = aux;
+  }
+
+  imprimeVet(son[it], vector_size);
+  imprimeVet(son[it+1], vector_size);
+  getchar();
+
+
+}
+
 int main(int argc, char** argv) {
 
   char stringA[] = "send";
@@ -339,7 +430,7 @@ int main(int argc, char** argv) {
   float pcross = .6;
   float pmut = .1;
   int   semente = -1;
-  int   S, C, M;
+  int   S, C, R;
   int   nro_de_sucesso;
   int   nro_de_execs = 1000;
   float convergencia[8];
@@ -349,74 +440,21 @@ int main(int argc, char** argv) {
 
   nro_de_sucesso = 0;
   j = 0;
-
-  for (M = 1; M <= 2; M++) {
-    for (C = 1; C <= 2; C++) {
-      for (S = 1; S <= 2; S++) {
-	for (i = 0; i < nro_de_execs; ++i) {
-	  if ( ag(tamanho_da_populacao, nro_de_geracoes, pcross, pmut, S, C, M, semente) ) {
-	    ++nro_de_sucesso;
-	  }
-	}
-	convergencia[j++] = ((float) nro_de_sucesso) / nro_de_execs;
-	nro_de_sucesso = 0;
-      }
-    }
-  }
+  ag(tamanho_da_populacao, nro_de_geracoes, pcross, pmut, 1, 2, 1, semente);
+  /* for (R = 1; R <= 2; M++) { */
+  /*   for (C = 1; C <= 2; C++) { */
+  /*     for (S = 1; S <= 2; S++) { */
+  /* 	for (i = 0; i < nro_de_execs; ++i) { */
+  /* 	  if ( ag(tamanho_da_populacao, nro_de_geracoes, pcross, pmut, S, C, R, semente) ) { */
+  /* 	    ++nro_de_sucesso; */
+  /* 	  } */
+  /* 	} */
+  /* 	convergencia[j++] = ((float) nro_de_sucesso) / nro_de_execs; */
+  /* 	nro_de_sucesso = 0; */
+  /*     } */
+  /*   } */
+  /* } */
 
   return 0;
 }
 
-void pmx(int* parent1, int* parent2, int* son1, int* son2, int vector_size, int p1, int p2) {
-
-  int exchange_aux, i, j, p1j, p2i, p2j;
-  int conflict[vector_size];
-  int found, found2;
-
-  for(i = 0; i < vector_size; i++) {
-
-    son1[i] = parent1[i];
-    son2[i] = parent2[i];
-  }
-
-  for(i = p1, j = 0; i <= p2; i ++) {
-    son1[i] = parent2[i];
-    son2[i] = parent1[i];
-
-    if(son1[i] != son2[i]) {
-      conflict[j] = i;
-      j++;
-    }
-  }
-
-  for(i = 0; i < j; i++) {
-    
-    found = found2 = 0;
-
-    for(p1j = 0; p1j < p1; p1j++) {
-      if ( son1[p1j] == son1[ conflict[i] ] ) {
-        son1[p1j] = son2[ conflict[i] ];
-        found = 1;
-        break;
-      }
-
-      if ( son2[p1j] == son2[ conflict[i] ] ) {
-        son2[p1j] = son1[ conflict[i] ];
-        found2 = 1;
-        break;
-      }
-    }
-
-    for (p1j = p2; p1j < vector_size && (!found || !found2); p1j++) {
-      if ( son1[p1j] == son1[ conflict[i] ] ) {
-        son1[p1j] = son2[ conflict[i] ];
-        break;
-      }
-
-      if ( son2[p1j] == son2[ conflict[i] ] ) {
-        son2[p1j] = son1[ conflict[i] ];
-        break;
-      }
-    }
-  }
-}
