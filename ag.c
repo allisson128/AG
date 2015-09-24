@@ -22,8 +22,8 @@ int**  init_population(int individual_size, int population_size);
 void   crossover_simple (int** newpopulation, int it, int** originalpopulation, int index_pai1, int index_pai2);
 void   pmx (int** parent, int pai1, int pai2, int vector_size, int** son, int it);
 void   permutation (int** newpopulation, int newpopulationsize, float mutationrate);
-
-
+void conflito(int** pop, int size, int domain,int it);
+void conflitolin(int* pop, int domain, int it);
 
 //(tamanho_da_populacao, nro_de_geracoes, pcross, pmut, S, C, M, semente)
 int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente) {
@@ -39,6 +39,11 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
   int    i, j, acc,it;
   int    optimal = -1;
   /* char** map; */
+
+  int** temp;
+  int base;
+  int index_pai1, index_pai2;
+  int x, y, valor_maior, maior, matrix;
 
   newpopulationsize = populationsize * crossoverrate;
 
@@ -59,7 +64,7 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
   }
 
   /* ATRIBUI NOTAS - Avalia populacao inicial */
-  int base;
+
   acc = 0;
   for (i = 0; i < populationsize; ++i) {
     acc += originalpopulation[i][domain_size] = evalAplusBequalC (originalpopulation[i]);
@@ -74,11 +79,13 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
   base = originalpopulation[0][11];
   //getchar();
   // LASSO
-  int index_pai1, index_pai2;
+  
   for (j = 0; (j < numero_geracoes) && (optimal < 0); ++j) {
     
     for (it = 0; it < newpopulationsize / 2; it++) {
 
+      /* printf("\nTOPO it\n"); */
+      /* conflito(originalpopulation , populationsize, 10, it); */
       //*************************** SELECAO ******************************
       if (S == 1) {
 	// Roleta 
@@ -88,8 +95,11 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
       else if (S == 2) {
 	// Torneio Simples
 	index_pai1 = tournament (originalpopulation, populationsize, tour);
+	imprimeVet(originalpopulation[index_pai1],10);
 	index_pai2 = tournament (originalpopulation, populationsize, tour);
+	imprimeVet(originalpopulation[index_pai2],10);
       }
+
       //******************************************************************
       printf("\n%d",index_pai1);
       printf("\n%d",index_pai2);
@@ -116,6 +126,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     /*************************** MUTACAO ******************************/
     permutation(newpopulation, newpopulationsize, mutationrate);
     /******************************************************************/
+    /* printf("\nPERMUT j\n"); */
+    /* conflito(originalpopulation , populationsize, 10, j); */
 
     /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
     acc = 0;
@@ -126,13 +138,18 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     }
     /******************************************************************/
 
+    /* printf("\nEVAL j\n"); */
+    /* conflito(originalpopulation , populationsize, 10, j); */
+
+
     /****** SELECIONA os melhores indiv. dentre os pais e filhos ******/
 
-    int** temp = init_population(domain_size, populationsize);
+    temp = init_population(domain_size, populationsize);
     //init_population(10);
-    for(i = 0; i < populationsize; i++) {
 
-      int x, y, valor_maior = -1, maior = 0, matrix = 0;
+    valor_maior = -1;
+    maior = 0, matrix = 0;
+    for(i = 0; i < populationsize; i++) {
 
       for(x = 0; x < populationsize; ++x) {
         if(originalpopulation[x][10] > valor_maior) {
@@ -152,8 +169,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
 
       if (matrix) {
         copy(temp[i], newpopulation[maior], 12);
-	newpopulation[maior][10] = 0;
-
+	newpopulation[maior][10] = -1;
+	valor_maior = -1;
 	if (temp[i][10] == EVAL_REFERENCE) {
 	  optimal = i;
 	}
@@ -161,13 +178,16 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
       }
       else {
         copy(temp[i], originalpopulation[maior], 12);
-	originalpopulation[maior][10] = 0;
-
+	originalpopulation[maior][10] = -1;
+	valor_maior = -1;
 	if (temp[i][10] == EVAL_REFERENCE) {
 	  optimal = i;
 	}
 
       }
+      printf("\nSEL2 i\n");
+      conflitolin(temp[i] , 10, i);
+
     }
     /****************************************************************/
     for (i = 0; i < domain_size; ++i) {
@@ -175,6 +195,11 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     }
     free(originalpopulation);
     originalpopulation = temp;
+
+    /* printf("\nBOT j\n"); */
+    /* conflito(originalpopulation , populationsize, 10, j); */
+
+
   }
 
   for (i = 0; i < populationsize; ++i) {
@@ -287,11 +312,19 @@ int tournament (int** population, int populationsize, int tour) {
 
   for (i = 0; i < tour; ++i) {
     candidates[i] = rand() % populationsize;
+    imprimeVet(population[candidates[i]],10);
     grade = evalAplusBequalC (population[candidates[i]]);
+    printf("i = %d", i);
+    printf("\ncandidates[i] = %d", candidates[i]);
+    printf("\ngrade = %d", grade);
     if (grade > topgrade) {
+      topgrade = grade;
       winner = candidates[i];
     }
   }
+  printf("\nVencedor: ");
+  imprimeVet(population[winner],10);
+  printf("\nwinner = %d\n", winner);
   return winner;
 }
 
@@ -330,7 +363,7 @@ void crossover_simple(int** newpopulation, int it, int** originalpopulation, int
 }
 
 void permutation(int** newpopulation, int newpopulationsize, float mutationrate) {
-  int i, aux, qtd = (int) newpopulationsize * mutationrate;
+  int i, aux, qtd = (int) (newpopulationsize * mutationrate);
   int rnd, rnd1, rnd2;
 
   for (i = 0; i < qtd; ++i) {
@@ -378,44 +411,67 @@ void pmx(int** parent, int pai1, int pai2, int vector_size, int** son, int it) {
   count1 = count2 = 0;
 
   for (i = 0; i < p1; i++) {
-    if (contain (&son[it][pai1], son[it][i],p2-p1)) {
+    if (contain (&son[it][p1], son[it][i],p2-p1+1)) {
       conflict [0][count1++] = i;
     }
 
-    if (contain (&son[it + 1][pai1], son[it + 1][i],p2-p1)) {
+    if (contain (&son[it + 1][p1], son[it + 1][i],p2-p1+1)) {
       conflict [1][count2++] = i;
     }
   }
 
   for (i = p2+1; i < vector_size; i++) {
-    if (contain (&son[it][pai1], son[it][i],p2-p1)) {
+    if (contain (&son[it][p1], son[it][i],p2-p1+1)) {
       conflict [0][count1++] = i;
     }
 
-    if (contain (&son[it + 1][pai1], son[it + 1][i],p2-p1)) {
+    if (contain (&son[it + 1][p1], son[it + 1][i],p2-p1+1)) {
       conflict [1][count2++] = i;
     }
   }
 
-  imprimeVet(parent[pai1], vector_size);
-  imprimeVet(parent[pai2], vector_size);
-
-
-  printf("\np1 = %d", p1);
-  printf("\np2 = %d", p2);
-  imprimeVet(conflict[0], count1);
-  imprimeVet(conflict[1], count1);
   for(i = 0; i < count1; i++) {
-    
-    aux = son[it][conflict[i][0]];
+    aux = son[it][conflict[0][i]];
     son[it][conflict[0][i]] = son[it + 1][conflict[1][i]];
     son[it + 1][conflict[1][i]] = aux;
   }
 
+  /*
+  imprimeVet(parent[pai1], vector_size);
+  imprimeVet(parent[pai2], vector_size);
+  printf("\np1 = %d", p1);
+  printf("\np2 = %d", p2);
+  imprimeVet(conflict[0], count1);
+  imprimeVet(conflict[1], count2);
   imprimeVet(son[it], vector_size);
   imprimeVet(son[it+1], vector_size);
   getchar();
+  */
 
+}
+
+void conflito(int** pop, int size, int domain, int it) {
+  int j,i;
+  for (i = 0; i < size; ++i) {
+    for (j = 0; j < domain - 1; ++j) {
+      if(contain(&pop[i][1+j], pop[i][j],domain - j - 1)) {
+	printf("\nit = %d", it);
+	imprimeVet(pop[i], 10);
+	getchar();
+      }
+    }
+  }
+}
+
+void conflitolin(int* pop, int domain, int it) {
+  int j,i;
+  for (j = 0; j < domain - 1; ++j) {
+    if(contain(&pop[1+j], pop[j],domain - j - 1)) {
+      printf("\nit = %d", it);
+      imprimeVet(pop, 10);
+      getchar();
+    }
+  }
 
 }
 
