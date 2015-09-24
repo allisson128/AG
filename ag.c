@@ -112,6 +112,12 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
       if (C == 2) {
 	pmx(originalpopulation, index_pai1, index_pai2, domain_size, newpopulation, it);
       }
+      printf("\npai\n");
+      conflitolin(originalpopulation[index_pai1], 10, it);
+      conflitolin(originalpopulation[index_pai2] , 10, it);
+      printf("\nCross i\n");
+      conflitolin(newpopulation[2*it], 10, it);
+      conflitolin(newpopulation[2*it + 1] , 10, it);
       /********************************************************************/
 
       /* imprimeVet(originalpopulation[index_pai1], 10); */
@@ -126,8 +132,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     /*************************** MUTACAO ******************************/
     permutation(newpopulation, newpopulationsize, mutationrate);
     /******************************************************************/
-    /* printf("\nPERMUT j\n"); */
-    /* conflito(originalpopulation , populationsize, 10, j); */
+    printf("\nPERMUT j\n");
+    conflito(newpopulation , populationsize, 10, j);
 
     /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
     acc = 0;
@@ -138,8 +144,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
     }
     /******************************************************************/
 
-    /* printf("\nEVAL j\n"); */
-    /* conflito(originalpopulation , populationsize, 10, j); */
+    printf("\nEVAL j\n");
+    conflito(newpopulation , populationsize, 10, j);
 
 
     /****** SELECIONA os melhores indiv. dentre os pais e filhos ******/
@@ -168,6 +174,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
       }
 
       if (matrix) {
+	printf("\nnewpop\n");
+	conflitolin(newpopulation[maior], 10, i);
         copy(temp[i], newpopulation[maior], 12);
 	newpopulation[maior][10] = -1;
 	valor_maior = -1;
@@ -177,6 +185,8 @@ int ag(int populationsize, int numero_geracoes, float crossoverrate, float mutat
 
       }
       else {
+	printf("\norgpop\n");
+	conflitolin(originalpopulation[maior], 10, i);
         copy(temp[i], originalpopulation[maior], 12);
 	originalpopulation[maior][10] = -1;
 	valor_maior = -1;
@@ -436,7 +446,7 @@ void pmx(int** parent, int pai1, int pai2, int vector_size, int** son, int it) {
     son[it + 1][conflict[1][i]] = aux;
   }
 
-  /*
+  
   imprimeVet(parent[pai1], vector_size);
   imprimeVet(parent[pai2], vector_size);
   printf("\np1 = %d", p1);
@@ -446,7 +456,6 @@ void pmx(int** parent, int pai1, int pai2, int vector_size, int** son, int it) {
   imprimeVet(son[it], vector_size);
   imprimeVet(son[it+1], vector_size);
   getchar();
-  */
 
 }
 
