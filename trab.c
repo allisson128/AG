@@ -8,16 +8,17 @@
 /* Auxiliares */
 int    aleatorioSemRep (int *vet, int size, int edge);   /* gera individuo aleatorio, sem repeticao de inteiros */
 int    funcAvaliacao (int *vet);                  
-void   show(int* vet, int size);
+void   show (int* vet, int size);
 int    contido (int* vet, int element, int size);  
 void   copy (int* destino, int* origem, int size);
 void   norep (int** pop, int size, int domain,int it);
 void   noreplin (int* pop, int domain, int it);
-char** initMap (char* A, char* B, char* C); 
+char  *initMap (char* A, char* B, char* C); 
 void   insereMapa (char* strconcat, int** pop, int linha);
+char  *compact(char *str);
 
 /* AG */
-int**  geraPop(int individual_size, int populacao_size);
+int  **geraPop(int individual_size, int populacao_size);
 int    roleta(int** populacao, int popSize, int col, int base, int value);
 int    torneio (int** populacao, int popSize, int tour);
 void   ptoSimples (int** newpopulacao, int it, int** originalpopulacao, int pai1, int pai2);
@@ -71,19 +72,16 @@ int
 alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente) 
 {
 
-  int**  originalpopulacao, **newpopulacao;
-
-  int    newpopSize;
-
-  int    cromossomos = 10;
-  int    tour;
-  int    i, j, acc,it;
+  int **originalpopulacao, **newpopulacao, newpopSize;
+  int   cromossomos = 10;
+  int   tour;
+  int   i, j, acc,it;
   int    optimal = -1;
-
-  int** temp;
+  int **temp;
   int base;
   int pai1, pai2;
   int x, y, valor_maior, maior, matrix;
+  char *mapa;
 
   newpopSize = (popSize -1) * crossoverrate;
   popSize = popSize + 1; //ultima linha serah o mapa
@@ -100,7 +98,6 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
   for(i = 0; i < popSize; ++i) {
     aleatorioSemRep(originalpopulacao[i], cromossomos, cromossomos);
   }
-
 
   // Insere Mapa na ultima linha
   mapa = initMap (strA, strB, strC);
@@ -306,24 +303,13 @@ void copy (int* destino, int* origem, int size) {
 char** 
 initMap (char* A, char* B, char* C) 
 {
-  /* Esse eh aquele vetor de letras nao repetidas */
+  int    size = (int) (strlen(A) + strlen(B) + strlen(C));
+  char  *map = (char*) malloc (size * sizeof(char));
 
-  int    size = (int) (sizeof(A) + sizeof(B) + sizeof(C));
-  int    singularSize; 		/* tamanho sem repeticao */
-  char** map  = (char**) malloc (2 * sizeof (char*));
-  char*  temp = (char*) malloc (size * sizeof(char));
-
-  strcpy(temp, A);
-  strcat(temp, B);
-  strcat(temp, C);
-
-  temp = compact(temp);
-
-  map[0] = (char*) malloc (size * sizeof(char));
-  map[1] = (char*) malloc (size * sizeof(char));
-
-  //free(temp);
-  
+  strcpy (map, A);
+  strcat (map, B);
+  strcat (map, C);
+  map = compact (map);
 
   return map;
 }
@@ -611,4 +597,52 @@ ciclico(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it)
     }
   } while (prox != ref); 
 
+}
+
+void
+insereMapa (char* strconcat, int** pop, int linha) 
+{
+  int i, size = strlen (strconcat);
+  printf("\nSize = %d", size);
+  for (i = 0; i < size; ++i)
+    {
+      pop[linha][i] = (int)strconcat[i];
+    }
+
+}
+
+
+char * 
+compact(char *str)
+{
+  int  len = strlen(str);
+  int  alphabet[26];
+  int  find, i=0, j=0;
+  char temp[len];
+  char *temp2;
+
+  while(str[i] != '\0')
+    {
+      find = str[i] - 'a';
+
+      if(alphabet[find] != 1)
+	{
+	  alphabet[find] = 1;
+	  temp[j] = str[i];
+	  j++;
+	}
+
+      i++;
+    }
+
+  temp2 = (char *)malloc(sizeof(char) * j);
+
+  for(i = 0; i < j; i++)
+    {
+      temp2[i] = temp[i];
+    }
+
+  temp2[j] = '\0';
+
+  return temp2;
 }
