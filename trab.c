@@ -13,7 +13,8 @@ int    contido (int* vet, int element, int size);
 void   copy (int* destino, int* origem, int size);
 void   norep (int** pop, int size, int domain,int it);
 void   noreplin (int* pop, int domain, int it);
-char** initEvalAuxVector (char* A, char* B, char* C); 
+char** initMap (char* A, char* B, char* C); 
+void   insereMapa (char* strconcat, int** pop, int linha);
 
 /* AG */
 int**  geraPop(int individual_size, int populacao_size);
@@ -38,9 +39,10 @@ main()
   int   S, C, R;
   float convergencia[8];
 
-  char fraseA[] = "send";
-  char fraseB[] = "more";
-  char fraseC[] = "money";
+  char* mapa;
+  char  fraseA[] = "send";
+  char  fraseB[] = "more";
+  char  fraseC[] = "money";
 
   int i, j;
 
@@ -83,7 +85,8 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
   int pai1, pai2;
   int x, y, valor_maior, maior, matrix;
 
-  newpopSize = popSize * crossoverrate;
+  newpopSize = (popSize -1) * crossoverrate;
+  popSize = popSize + 1; //ultima linha serah o mapa
 
   /* srand( (unsigned int) (semente < 0 ? time(NULL) : semente) ); */
   srand(time(NULL));
@@ -93,9 +96,15 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
   originalpopulacao = geraPop(cromossomos, popSize);
   newpopulacao = geraPop(cromossomos, popSize);
 	
+  // Preenche Pop
   for(i = 0; i < popSize; ++i) {
     aleatorioSemRep(originalpopulacao[i], cromossomos, cromossomos);
   }
+
+
+  // Insere Mapa na ultima linha
+  mapa = initMap (strA, strB, strC);
+  insereMapa (mapa, originalpopulacao, popSize);
 
   // Avalia Pop
   acc = 0;
@@ -295,7 +304,7 @@ void copy (int* destino, int* origem, int size) {
 }
 
 char** 
-initEvalAuxVector (char* A, char* B, char* C) 
+initMap (char* A, char* B, char* C) 
 {
   /* Esse eh aquele vetor de letras nao repetidas */
 
@@ -308,14 +317,19 @@ initEvalAuxVector (char* A, char* B, char* C)
   strcat(temp, B);
   strcat(temp, C);
 
+  temp = compact(temp);
+
   map[0] = (char*) malloc (size * sizeof(char));
   map[1] = (char*) malloc (size * sizeof(char));
 
-  free(temp);
+  //free(temp);
+  
+
+  return map;
 }
 
 int
-funcAvaliacao (int *vet) 
+funcAvaliacao (int* vet, int** population, int mapline) 
 {
   /* *********** */
   /* IMPROVISADA */
