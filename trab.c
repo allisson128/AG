@@ -24,6 +24,7 @@ int    torneio (int** populacao, int popSize, int tour);
 void   ptoSimples (int** newpopulacao, int it, int** originalpopulacao, int pai1, int pai2);
 void   ciclico(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
 void   pmx (int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
+void   pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
 void   mutation (int** newpopulacao, int newpopSize, float mutationrate);
 
 
@@ -49,7 +50,7 @@ main()
 
   j = sucesso = 0;
 
-  alggen(popSize, geracoes, pcross, pmut, 3, 1, 1, semente);
+  alggen(popSize, geracoes, pcross, pmut, 3, 2, 1, semente);
   /* for (R = 1; R <= 2; M++) { */
   /*   for (C = 1; C <= 2; C++) { */
   /*     for (S = 1; S <= 2; S++) { */
@@ -100,8 +101,8 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
   }
 
   // Insere Mapa na ultima linha
-  mapa = initMap (strA, strB, strC);
-  insereMapa (mapa, originalpopulacao, popSize);
+  /* mapa = initMap (strA, strB, strC); */
+  /* insereMapa (mapa, originalpopulacao, popSize); */
 
   // Avalia Pop
   acc = 0;
@@ -150,7 +151,7 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
 	ciclico(originalpopulacao, pai1, pai2, cromossomos, newpopulacao, it);
       }
       if (C == 2) {
-	pmx(originalpopulacao, pai1, pai2, cromossomos, newpopulacao, it);
+	pmx2(originalpopulacao, pai1, pai2, cromossomos, newpopulacao, it);
       }
       printf("\npai\n");
       noreplin(originalpopulacao[pai1], 10, it);
@@ -300,7 +301,7 @@ void copy (int* destino, int* origem, int size) {
 
 }
 
-char** 
+char* 
 initMap (char* A, char* B, char* C) 
 {
   int    size = (int) (strlen(A) + strlen(B) + strlen(C));
@@ -315,7 +316,8 @@ initMap (char* A, char* B, char* C)
 }
 
 int
-funcAvaliacao (int* vet, int** population, int mapline) 
+funcAvaliacao (int* vet) 
+//funcAvaliacao (int* vet, int** population, int mapline) 
 {
   /* *********** */
   /* IMPROVISADA */
@@ -441,32 +443,82 @@ mutation(int** newpopulacao, int newpopSize, float mutationrate)
   }
 
 }
-/* RASCUNHO:
-   map = initEvalAuxVector (argv[1], argv[2], argv[3]); 
-*/
 
-/* void  */
-/* pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) { */
+void
+pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
 
-/*   int r1 = rand () % vector_size; */
-/*   int r2 = rand () % vector_size; */
-/*   int i,j; */
+  int r1 = rand () % vector_size;
+  int r2 = rand () % vector_size;
+  int i,j, aux;
+  int conf1[vector_size], size1 = 0;
+  int conf2[vector_size], size2 = 0;
 
-/*   if (r1 > r2)  */
-/*     { */
-/*       aux = r1; */
-/*       r1 = r2; */
-/*       r2 = aux; */
-/*     } */
+  if (r1 > r2)
+    {
+      aux = r1;
+      r1 = r2;
+      r2 = aux;
+    }
 
-/*   it *= 2; */
+  it *= 2;
 
-/*   copy(filhos[it], pais[pai1], 12); */
-/*   copy(filhos[it + 1], pais[pai2], 12); */
+  copy(filhos[it], pais[pai1], 12);
+  copy(filhos[it + 1], pais[pai2], 12);
 
-  
+  for (i = r1; i <= r2; ++i)
+    {
+      aux = filhos[it][i];
+      filhos[it][i] = filhos[it + 1][i];
+      filhos[it + 1][i] = aux;
+    }
 
-/* } */
+  // Saporra acha os conflitos do filho 1
+  for (i = r1; i != r2; ++i)
+    {
+      for (j = 0; j < vector_size; ++j)
+	{
+	  if (j >= r1 && j <= r2) 
+	    {
+	      continue;
+	    }
+	  else if (filhos[it][i] == filhos[it][j]) 
+	    {
+	      conf1[size1++] = filhos[it][i];
+	    }
+	}
+    }
+  // Saporra acha os conflitos do filho 2
+  for (i = r1; i != r2; ++i)
+    {
+      for (j = 0; j < vector_size; ++j)
+	{
+	  if (j >= r1 && j <= r2) 
+	    {
+	      continue;
+	    }
+	  else if (filhos[it + 1][i] == filhos[it + 1][j]) 
+	    {
+	      conf2[size2++] = filhos[it + 1][i];
+	    }
+	}
+    }
+
+  // Verifica erro do PMX
+  if (size1 != size2)
+    {
+      printf ("\nERRO NO PMX2- Tamanhos de conflitos diferentes\n");
+      getchar ();
+    }
+
+  // Troca os conflitos de filho
+  for (i = 0; i < size1; ++i)
+    {
+      aux = filhos[it][ conf1[i] ];
+      filhos[it][ conf1[i] ] = filhos[it + 1][ conf2[i] ];
+      filhos[it + 1][ conf2[i] ] = aux;
+    }
+
+}
 
 void
 pmx(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) 
