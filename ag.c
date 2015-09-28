@@ -1,8 +1,3 @@
-/* OBS:
-   - Pode-se gerar soh 8 numeros?
-   - Pode ter numeros repetidos?
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
