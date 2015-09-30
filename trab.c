@@ -5,30 +5,31 @@
 
 #define notaMaxima 100000
 
-/* Auxiliares */
-int    aleatorioSemRep (int *vet, int size, int edge);   /* gera individuo aleatorio, sem repeticao de inteiros */
+// Auxiliares 
+int    aleatorioSemRep (int *vet, int size, int edge);   
+/* gera individuo aleatorio, sem repeticao de inteiros */
 int    funcAvaliacao (int *vet);                  
-void   show (int* vet, int size);
-int    contido (int* vet, int element, int size);  
-void   copy (int* destino, int* origem, int size);
-void   norep (int** pop, int size, int domain,int it);
-void   noreplin (int* pop, int domain, int it);
-char  *initMap (char* A, char* B, char* C); 
-void   insereMapa (char* strconcat, int** pop, int linha);
+void   show (int *vet, int size);
+void   showinv (int *vet, int size);
+int    contido (int *vet, int element, int size);  
+void   copy (int *destino, int *origem, int size);
+void   norep (int **pop, int size, int domain,int it);
+void   noreplin (int *pop, int domain, int it);
+char  *initMap (char *A, char *B, char *C); 
+void   insereMapa (char* strconcat, int **pop, int linha);
 char  *compact(char *str);
 
-/* AG */
-int  **geraPop(int individual_size, int populacao_size);
-int    roleta(int** populacao, int popSize, int col, int base, int value);
-int    torneio (int** populacao, int popSize, int tour);
-void   ptoSimples (int** newpopulacao, int it, int** originalpopulacao, int pai1, int pai2);
-void   ciclico(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
-void   pmx (int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
-void   pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it);
-void   mutation (int** newpopulacao, int newpopSize, float mutationrate);
+// AG
+int  **geraPop (int individual_size, int populacao_size);
+int    roleta (int **populacao, int popSize, int col, int base, int value);
+int    torneio (int **populacao, int popSize, int tour);
+void   ptoSimples (int **newpopulacao, int it, int **originalpopulacao, int pai1, int pai2);
+void   ciclico (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it);
+void   pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it);
+void   mutation (int **newpopulacao, int newpopSize, float mutationrate);
 
 
-int alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente);
+int alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente);
 
 
 int
@@ -41,7 +42,7 @@ main()
   int   S, C, R;
   float convergencia[8];
 
-  char* mapa;
+  char *mapa;
   char  fraseA[] = "send";
   char  fraseB[] = "more";
   char  fraseC[] = "money";
@@ -50,7 +51,7 @@ main()
 
   j = sucesso = 0;
 
-  alggen(popSize, geracoes, pcross, pmut, 3, 2, 1, semente);
+  alggen (popSize, geracoes, pcross, pmut, 2, 2, 1, semente);
   /* for (R = 1; R <= 2; M++) { */
   /*   for (C = 1; C <= 2; C++) { */
   /*     for (S = 1; S <= 2; S++) { */
@@ -70,11 +71,11 @@ main()
 
 
 int 
-alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente) 
+alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente) 
 {
 
   int **originalpopulacao, **newpopulacao, newpopSize;
-  int   cromossomos = 10;
+  int   nrocromossomos = 10;
   int   tour;
   int   i, j, acc,it;
   int    optimal = -1;
@@ -84,21 +85,23 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
   int x, y, valor_maior, maior, matrix;
   char *mapa;
 
-  newpopSize = (popSize -1) * crossoverrate;
+  newpopSize = (popSize-1) * crossoverrate;
+  newpopSize = newpopSize + newpopSize % 2; //parifica
   popSize = popSize + 1; //ultima linha serah o mapa
 
   /* srand( (unsigned int) (semente < 0 ? time(NULL) : semente) ); */
-  srand(time(NULL));
+  srand (time (NULL));
 
 
   // Gera Pop
-  originalpopulacao = geraPop(cromossomos, popSize);
-  newpopulacao = geraPop(cromossomos, popSize);
+  originalpopulacao = geraPop (nrocromossomos, popSize);
+  newpopulacao = geraPop (nrocromossomos, popSize);
 	
   // Preenche Pop
-  for(i = 0; i < popSize; ++i) {
-    aleatorioSemRep(originalpopulacao[i], cromossomos, cromossomos);
-  }
+  for (i = 0; i < popSize; ++i) 
+    {
+      aleatorioSemRep (originalpopulacao[i], nrocromossomos, nrocromossomos);
+    }
 
   // Insere Mapa na ultima linha
   /* mapa = initMap (strA, strB, strC); */
@@ -106,161 +109,165 @@ alggen(int popSize, int numero_geracoes, float crossoverrate, float mutationrate
 
   // Avalia Pop
   acc = 0;
-  for (i = 0; i < popSize; ++i) {
-    acc += originalpopulacao[i][cromossomos] = funcAvaliacao (originalpopulacao[i]);
+  for (i = 0; i < popSize; ++i) 
+    {
+      acc += originalpopulacao[i][nrocromossomos] = funcAvaliacao (originalpopulacao[i]);
 
-    if (originalpopulacao[i][cromossomos] == notaMaxima) {
-      optimal = i;
+      if (originalpopulacao[i][nrocromossomos] == notaMaxima) 
+	{
+	  optimal = i;
+	}
+
+      originalpopulacao[i][11] = acc;
+      /* show(originalpopulacao[i], 12); */
     }
-
-    originalpopulacao[i][11] = acc;
-    //show(originalpopulacao[i], 12);
-  }
   base = originalpopulacao[0][11];
-  //getchar();
-  
-  for (j = 0; (j < numero_geracoes) && (optimal < 0); ++j) {
+
+  for (j = 0; (j < numero_geracoes) && (optimal < 0); ++j) 
+    {
     
-    for (it = 0; it < newpopSize / 2; it++) {
+      for (it = 0; it < (newpopSize / 2); ++it) 
+	{
 
-      /* printf("\nTOPO it\n"); */
-      /* norep(originalpopulacao , popSize, 10, it); */
-      //*************************** SELECAO ******************************
-      if (S == 1) {
-	// Roleta 
-	pai1 = roleta (originalpopulacao, popSize, cromossomos + 1, base, acc);
-	pai2 = roleta (originalpopulacao, popSize, cromossomos + 1, base, acc);
-      }
-      else if (S == 2 || S == 3) {
-	// Torneio Simples
-	tour = (S == 2) ? 3 : 2;
+	  /* printf("\nTOPO it\n"); */
+	  /* norep(originalpopulacao , popSize, 10, it); */
+	  //*************************** SELECAO ******************************
+	  if (S == 1) 
+	    {
+	      // Roleta 
+	      pai1 = roleta (originalpopulacao, popSize, nrocromossomos + 1, base, acc);
+	      pai2 = roleta (originalpopulacao, popSize, nrocromossomos + 1, base, acc);
+	    }
+	  else if (S == 2 || S == 3) 
+	    {
+	      // Torneio Simples
+	      tour = (S == 2) ? 3 : 2;
 
-	pai1 = torneio (originalpopulacao, popSize, tour);
-	/* show(originalpopulacao[pai1],10); */
-	pai2 = torneio (originalpopulacao, popSize, tour);
-	/* show(originalpopulacao[pai2],10); */
-      }
-      //******************************************************************
-      printf("\n%d",pai1);
-      printf("\n%d",pai2);
+	      pai1 = torneio (originalpopulacao, popSize, tour);
+	      /* show(originalpopulacao[pai1],10); */
+	      pai2 = torneio (originalpopulacao, popSize, tour);
+	      /* show(originalpopulacao[pai2],10); */
+	    }
+	  //******************************************************************
+	  /* printf("\n%d",pai1); */
+	  /* printf("\n%d",pai2); */
 
-      /*************************** CROSSOVER ******************************/
-      //Ciclico
-      if (C == 1) {
-	/* ptoSimples(newpopulacao, it, originalpopulacao, pai1, pai2); */
-	ciclico(originalpopulacao, pai1, pai2, cromossomos, newpopulacao, it);
-      }
-      if (C == 2) {
-	pmx2(originalpopulacao, pai1, pai2, cromossomos, newpopulacao, it);
-      }
-      printf("\npai\n");
-      noreplin(originalpopulacao[pai1], 10, it);
-      noreplin(originalpopulacao[pai2] , 10, it);
-      printf("\nCross i\n");
-      noreplin(newpopulacao[2*it], 10, it);
-      noreplin(newpopulacao[2*it + 1] , 10, it);
-      /********************************************************************/
+	  /*************************** CROSSOVER ******************************/
+	  //Ciclico
+	  if (C == 1) 
+	    {
+	      /* ptoSimples(newpopulacao, it, originalpopulacao, pai1, pai2); */
+	      ciclico (originalpopulacao, pai1, pai2, nrocromossomos, newpopulacao, it);
+	    }
+	  if (C == 2) 
+	    {
+	      pmx (originalpopulacao, pai1, pai2, nrocromossomos, newpopulacao, it);
+	    }
+	  /* printf("\npai\n"); */
+	  /* noreplin(originalpopulacao[pai1], 10, it); */
+	  /* noreplin(originalpopulacao[pai2] , 10, it); */
+	  /* printf("\nCross i\n"); */
+	  /* noreplin(newpopulacao[2*it], 10, it); */
+	  /* noreplin(newpopulacao[2*it + 1] , 10, it); */
+	  /********************************************************************/
 
-      /* show(originalpopulacao[pai1], 10); */
-      /* show(originalpopulacao[pai2], 10); */
-      /* putchar('\n'); */
-      /* show(newpopulacao[2*it], 10); */
-      /* show(newpopulacao[2*it+1], 10); */
-      /* putchar('\n'); */
-      /* getchar(); */
-    }
+	  /* show(originalpopulacao[pai1], 10); */
+	  /* show(originalpopulacao[pai2], 10); */
+	  /* putchar('\n'); */
+	  /* show(newpopulacao[2*it], 10); */
+	  /* show(newpopulacao[2*it+1], 10); */
+	  /* putchar('\n'); */
+	  /* getchar(); */
+	}
 		
-    /*************************** MUTACAO ******************************/
-    mutation(newpopulacao, newpopSize, mutationrate);
-    /******************************************************************/
-    printf("\nPERMUT j\n");
-    norep(newpopulacao , newpopSize, 10, j);
+      /*************************** MUTACAO ******************************/
+      mutation(newpopulacao, newpopSize, mutationrate);
+      /******************************************************************/
+      /* printf("\nPERMUT j\n"); */
+      /* for (i = 0; i < newpopSize; ++i)  */
+      /* 	{ */
+      /* 	  show(newpopulacao[i], 12); */
+      /* 	} */
+      norep (newpopulacao, newpopSize, 10, j);
 
-    /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
-    acc = 0;
-    for (i = 0; i < newpopSize; ++i) {
-      acc += newpopulacao[i][10] = funcAvaliacao (newpopulacao[i]);
-      newpopulacao[i][11] = acc;
-      /* show(newpopulacao[i], 12); */
-    }
-    /******************************************************************/
-
-    printf("\nEVAL j\n");
-    norep(newpopulacao , newpopSize, 10, j);
-
-
-    /****** SELECIONA os melhores indiv. dentre os pais e filhos ******/
-
-    temp = geraPop(cromossomos, popSize);
-    //geraPop(10);
-
-    valor_maior = -1;
-    maior = 0, matrix = 0;
-    for(i = 0; i < popSize; i++) {
-
-      for(x = 0; x < popSize; ++x) {
-        if(originalpopulacao[x][10] > valor_maior) {
-	  maior = x;
-	  matrix = 0;
-	  valor_maior = originalpopulacao[maior][10];
-        }
+      /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
+      acc = 0;
+      for (i = 0; i < newpopSize; ++i) {
+	acc += newpopulacao[i][10] = funcAvaliacao (newpopulacao[i]);
+	newpopulacao[i][11] = acc;
+	/* show(newpopulacao[i], 12); */
       }
+      /******************************************************************/
 
-      for(y = 0; y < newpopSize; ++y) {
-        if(newpopulacao[y][10] > valor_maior){
-	  maior = y;
-	  matrix = 1;
-	  valor_maior = newpopulacao[y][10];
-        }
-      }
 
-      if (matrix) {
-	printf("\nnewpop\n");
-	noreplin(newpopulacao[maior], 10, i);
-        copy(temp[i], newpopulacao[maior], 12);
-	newpopulacao[maior][10] = -1;
-	valor_maior = -1;
-	if (temp[i][10] == notaMaxima) {
-	  optimal = i;
+      /****** SELECIONA os melhores indiv. dentre os pais e filhos ******/
+
+      temp = geraPop(nrocromossomos, popSize);
+
+      valor_maior = -1;
+      maior = 0, matrix = 0;
+      for(i = 0; i < popSize; i++) {
+
+	for(x = 0; x < popSize; ++x) {
+	  if(originalpopulacao[x][10] > valor_maior) {
+	    maior = x;
+	    matrix = 0;
+	    valor_maior = originalpopulacao[maior][10];
+	  }
 	}
 
-      }
-      else {
-	printf("\norgpop\n");
-	noreplin(originalpopulacao[maior], 10, i);
-        copy(temp[i], originalpopulacao[maior], 12);
-	originalpopulacao[maior][10] = -1;
-	valor_maior = -1;
-	if (temp[i][10] == notaMaxima) {
-	  optimal = i;
+	for(y = 0; y < newpopSize; ++y) {
+	  if(newpopulacao[y][10] > valor_maior){
+	    maior = y;
+	    matrix = 1;
+	    valor_maior = newpopulacao[y][10];
+	  }
 	}
 
+	if (matrix) {
+	  copy(temp[i], newpopulacao[maior], 12);
+	  newpopulacao[maior][10] = -1;
+	  valor_maior = -1;
+	  if (temp[i][10] == notaMaxima) {
+	    optimal = i;
+	  }
+
+	}
+	else {
+	  copy(temp[i], originalpopulacao[maior], 12);
+	  originalpopulacao[maior][10] = -1;
+	  valor_maior = -1;
+	  if (temp[i][10] == notaMaxima) {
+	    optimal = i;
+	  }
+
+	}
+	/* printf("\nSEL2 i\n"); */
+	/* noreplin(temp[i] , 10, i); */
+
       }
-      printf("\nSEL2 i\n");
-      noreplin(temp[i] , 10, i);
+      /****************************************************************/
+      for (i = 0; i < nrocromossomos; ++i) {
+	free(originalpopulacao[i]);
+      }
+      free(originalpopulacao);
+      originalpopulacao = temp;
+
+      /* printf("\nBOT j\n"); */
+      /* norep(originalpopulacao , popSize, 10, j); */
+
 
     }
-    /****************************************************************/
-    for (i = 0; i < cromossomos; ++i) {
-      free(originalpopulacao[i]);
+
+  for (i = popSize - 1; i >= 0; --i) {
+    show (originalpopulacao[i], 12);
+  }
+
+
+  if (optimal >= 0) 
+    {
+      printf ("\nSucesso - Optimal = %d\n", optimal);
     }
-    free(originalpopulacao);
-    originalpopulacao = temp;
-
-    /* printf("\nBOT j\n"); */
-    /* norep(originalpopulacao , popSize, 10, j); */
-
-
-  }
-
-  for (i = 0; i < popSize; ++i) {
-    show(originalpopulacao[i], 12);
-  }
-
-
-  if (optimal >= 0) {
-    printf("\nSucesso - Optimal = %d\n", optimal);
-  }
 
 
   return 0;
@@ -370,24 +377,24 @@ torneio (int** populacao, int popSize, int tour)
 
   for (i = 0; i < tour; ++i) {
     candidates[i] = rand() % popSize;
-    show(populacao[candidates[i]],10);
     grade = funcAvaliacao (populacao[candidates[i]]);
-    printf("i = %d", i);
-    printf("\ncandidates[i] = %d", candidates[i]);
-    printf("\ngrade = %d", grade);
+    /* printf("\ni = %d", i); */
+    /* show(populacao[candidates[i]],10); */
+    /* printf("\ncandidates[i] = %d", candidates[i]); */
+    /* printf("\ngrade = %d", grade); */
     if (grade > topgrade) {
       topgrade = grade;
       winner = candidates[i];
     }
   }
-  printf("\nVencedor: ");
-  show(populacao[winner],10);
-  printf("\nwinner = %d\n", winner);
+  /* printf("\nVencedor: "); */
+  /* show(populacao[winner],10); */
+  /* printf("\nwinner = %d\n", winner); */
   return winner;
 }
 
 void
-show(int* vet, int size) 
+show (int *vet, int size) 
 {
   int i;
   putchar('\n');
@@ -397,8 +404,19 @@ show(int* vet, int size)
   putchar('\n');
 }
 
+void
+showinv (int *vet, int size) 
+{
+  int i;
+  putchar('\n');
+  for (i = size-1; i >=0; --i) {
+    printf ("%d ", vet[i]);
+  }
+
+}
+
 int** 
-geraPop(int individual_size, int populacao_size) 
+geraPop (int individual_size, int populacao_size) 
 {
   int **temp;
   int i;
@@ -445,7 +463,7 @@ mutation(int** newpopulacao, int newpopSize, float mutationrate)
 }
 
 void
-pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
+pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it) {
 
   int r1 = rand () % vector_size;
   int r2 = rand () % vector_size;
@@ -465,6 +483,12 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
   copy(filhos[it], pais[pai1], 12);
   copy(filhos[it + 1], pais[pai2], 12);
 
+  /* printf ("\n******************** PMX2 **************************"); */
+  /* printf ("\nFilhos Originais"); */
+  /* show (filhos[it], 12); */
+  /* show (filhos[it + 1], 12); */
+
+  // Troca o miolo dos filhos
   for (i = r1; i <= r2; ++i)
     {
       aux = filhos[it][i];
@@ -472,8 +496,12 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
       filhos[it + 1][i] = aux;
     }
 
+  /* printf ("\nMiolos trocados"); */
+  /* show (filhos[it], 12); */
+  /* show (filhos[it + 1], 12); */
+
   // Saporra acha os conflitos do filho 1
-  for (i = r1; i != r2; ++i)
+  for (i = r1; i <= r2; ++i)
     {
       for (j = 0; j < vector_size; ++j)
 	{
@@ -483,12 +511,12 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
 	    }
 	  else if (filhos[it][i] == filhos[it][j]) 
 	    {
-	      conf1[size1++] = filhos[it][i];
+	      conf1[size1++] = j;
 	    }
-	}
+  	}
     }
   // Saporra acha os conflitos do filho 2
-  for (i = r1; i != r2; ++i)
+  for (i = r1; i <= r2; ++i)
     {
       for (j = 0; j < vector_size; ++j)
 	{
@@ -498,7 +526,7 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
 	    }
 	  else if (filhos[it + 1][i] == filhos[it + 1][j]) 
 	    {
-	      conf2[size2++] = filhos[it + 1][i];
+	      conf2[size2++] = j;
 	    }
 	}
     }
@@ -510,6 +538,10 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
       getchar ();
     }
 
+  /* printf ("\nConflitos:"); */
+  /* show (conf1, size1); */
+  /* show (conf2, size2); */
+
   // Troca os conflitos de filho
   for (i = 0; i < size1; ++i)
     {
@@ -518,95 +550,32 @@ pmx2(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) {
       filhos[it + 1][ conf2[i] ] = aux;
     }
 
+  /* printf ("\nConflitos Trocados:"); */
+  /* show (filhos[it], 12); */
+  /* show (filhos[it + 1], 12); */
 }
 
 void
-pmx(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) 
-{
-
-  int count1, count2, aux, i, j;
-  int conflict[vector_size][2];
-  
-  int p1 = rand () % vector_size;
-  int p2 = rand () % vector_size;
-
-  if (p1 > p2) {
-    aux = p1;
-    p1 = p2;
-    p2 = aux;
-  }
-
-  it *= 2;
-
-  for (i = 0; i < vector_size; i++) {
-    if (i >= p1 && i <= p2) {
-      filhos[it][i] = pais[pai2][i];
-      filhos[it + 1][i] = pais[pai1][i];
-    }
-    else {
-      filhos[it][i] = pais[pai1][i];
-      filhos[it + 1][i] = pais[pai2][i];
-    }
-  }
-
-  count1 = count2 = 0;
-
-  for (i = 0; i < p1; i++) {
-    if (contido (&filhos[it][p1], filhos[it][i],p2-p1+1)) {
-      conflict [0][count1++] = i;
-    }
-
-    if (contido (&filhos[it + 1][p1], filhos[it + 1][i],p2-p1+1)) {
-      conflict [1][count2++] = i;
-    }
-  }
-
-  for (i = p2+1; i < vector_size; i++) {
-    if (contido (&filhos[it][p1], filhos[it][i],p2-p1+1)) {
-      conflict [0][count1++] = i;
-    }
-
-    if (contido (&filhos[it + 1][p1], filhos[it + 1][i],p2-p1+1)) {
-      conflict [1][count2++] = i;
-    }
-  }
-
-  for(i = 0; i < count1; i++) {
-    aux = filhos[it][conflict[0][i]];
-    filhos[it][conflict[0][i]] = filhos[it + 1][conflict[1][i]];
-    filhos[it + 1][conflict[1][i]] = aux;
-  }
-
-  
-  /* show(pais[pai1], vector_size); */
-  /* show(pais[pai2], vector_size); */
-  /* printf("\np1 = %d", p1); */
-  /* printf("\np2 = %d", p2); */
-  /* show(conflict[0], count1); */
-  /* show(conflict[1], count2); */
-  /* show(filhos[it], vector_size); */
-  /* show(filhos[it+1], vector_size); */
-  /* getchar(); */
-
-}
-
-void
-norep(int** pop, int size, int domain, int it) 
+norep (int **pop, int size, int domain, int it) 
 {
   int j,i;
-  for (i = 0; i < size; ++i) {
-    for (j = 0; j < domain - 1; ++j) {
-      if(contido(&pop[i][1+j], pop[i][j],domain - j - 1)) {
-	printf("\nit = %d", it);
-	show(pop[i], 10);
-	getchar();
-      }
+  for (i = 0; i < size; ++i) 
+    {
+      for (j = 0; j < domain - 1; ++j) 
+	{
+	  if(contido (&pop[i][1+j], pop[i][j], domain - j - 1)) {
+	    printf ("\nnewpopsize = %d", size);
+	    printf ("\nlinha %d", i);
+	    printf ("\nit = %d", it);
+	    show (pop[i], 12);
+	    getchar ();
+	  }
+	}
     }
-  }
 }
 
 void
-noreplin(int* pop, int domain, int it) 
+noreplin (int *pop, int domain, int it) 
 {
   int j,i;
   for (j = 0; j < domain - 1; ++j) {
@@ -665,7 +634,7 @@ insereMapa (char* strconcat, int** pop, int linha)
 
 
 char * 
-compact(char *str)
+compact (char *str)
 {
   int  len = strlen(str);
   int  alphabet[26];
@@ -673,11 +642,11 @@ compact(char *str)
   char temp[len];
   char *temp2;
 
-  while(str[i] != '\0')
+  while (str[i] != '\0')
     {
       find = str[i] - 'a';
 
-      if(alphabet[find] != 1)
+      if (alphabet[find] != 1)
 	{
 	  alphabet[find] = 1;
 	  temp[j] = str[i];
@@ -687,9 +656,9 @@ compact(char *str)
       i++;
     }
 
-  temp2 = (char *)malloc(sizeof(char) * j);
+  temp2 = (char *) malloc (sizeof (char) * j);
 
-  for(i = 0; i < j; i++)
+  for (i = 0; i < j; i++)
     {
       temp2[i] = temp[i];
     }
