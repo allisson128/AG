@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #define notaMaxima 100000
 
@@ -9,6 +10,7 @@
 int    aleatorioSemRep (int *vet, int size, int edge);   
 /* gera individuo aleatorio, sem repeticao de inteiros */
 int    funcAvaliacao (int *vet);                  
+int    aval (int *vet, char *mapa, char *strA, char *strB, char *strC);
 void   show (int *vet, int size);
 int    contido (int *vet, int element, int size);  
 void   copy (int *destino, int *origem, int size);
@@ -28,7 +30,8 @@ void   pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int i
 void   mutation (int **newpopulacao, int newpopSize, float mutationrate);
 
 
-int alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente);
+int alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, 
+	    int S, int C, int M, char *strA, char *strB, char *strC, int semente);
 
 
 int
@@ -46,9 +49,9 @@ main (int argc, char **argv)
   float convergencia[8];
 
   char *mapa;
-  char  fraseA[] = "send";
-  char  fraseB[] = "more";
-  char  fraseC[] = "money";
+  char  fraseA[] = "coca";
+  char  fraseB[] = "cola";
+  char  fraseC[] = "oasis";
 
   int i;
   int j = 0;
@@ -58,7 +61,7 @@ main (int argc, char **argv)
       S = atoi(argv[1]);
       C = atoi(argv[2]);
       R = atoi(argv[3]);
-      alggen (popSize, geracoes, pcross, pmut, S, C, R, semente);
+      alggen (popSize, geracoes, pcross, pmut, S, C, R, fraseA, fraseB, fraseC, semente);
     }
   else 
     {
@@ -70,9 +73,11 @@ main (int argc, char **argv)
 		{
 		  for (i = 0; i < nro_de_execs; ++i) 
 		    {
-		      if ( alggen (popSize, geracoes, pcross, pmut, S, C, R, semente) ) 
+		      if ( alggen (popSize, geracoes, pcross, pmut, S, C, R, 
+				   fraseA, fraseB, fraseC, semente) ) 
 			{
 			  ++sucesso;
+			  getchar ();
 			}
 		    }
 		  convergencia[j++] = ((float) sucesso) / nro_de_execs;
@@ -86,23 +91,22 @@ main (int argc, char **argv)
 
 
 int 
-alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, int semente) 
+alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, char *strA, char *strB, char *strC, int semente) 
 {
 
-  int **originalpopulacao, **newpopulacao, newpopSize;
+  int   **originalpopulacao, **newpopulacao, newpopSize;
   int   nrocromossomos = 10;
   int   tour;
   int   i, j, acc,it;
-  int    optimal = -1;
-  int **temp;
-  int base;
-  int pai1, pai2;
-  int x, y, valor_maior, maior, matrix;
-  char *mapa;
+  int   optimal = -1;
+  int   **temp;
+  int   base;
+  int   pai1, pai2;
+  int   x, y, valor_maior, maior, matrix;
+  char  *mapa;
 
-  newpopSize = (popSize-1) * crossoverrate;
+  newpopSize = popSize * crossoverrate;
   newpopSize = newpopSize + newpopSize % 2; //parifica
-  popSize = popSize + 1; //ultima linha serah o mapa
 
   /* srand( (unsigned int) (semente < 0 ? time(NULL) : semente) ); */
   srand (time (NULL));
@@ -119,14 +123,16 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
     }
 
   // Insere Mapa na ultima linha
-  /* mapa = initMap (strA, strB, strC); */
-  /* insereMapa (mapa, originalpopulacao, popSize); */
+  mapa = initMap (strA, strB, strC);
+  //printf ("\nmapa = %s", mapa);
+  //insereMapa (mapa, originalpopulacao, popSize);
 
   // Avalia Pop
   acc = 0;
   for (i = 0; i < popSize; ++i) 
     {
-      acc += originalpopulacao[i][nrocromossomos] = funcAvaliacao (originalpopulacao[i]);
+      acc += originalpopulacao[i][nrocromossomos] = aval (originalpopulacao[i], 
+							  mapa, strA, strB, strC);
 
       if (originalpopulacao[i][nrocromossomos] == notaMaxima) 
 	{
@@ -208,7 +214,7 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
       /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
       acc = 0;
       for (i = 0; i < newpopSize; ++i) {
-	acc += newpopulacao[i][10] = funcAvaliacao (newpopulacao[i]);
+	acc += newpopulacao[i][10] = aval (newpopulacao[i], mapa, strA, strB, strC);
 	newpopulacao[i][11] = acc;
 	/* show(newpopulacao[i], 12); */
       }
@@ -283,6 +289,7 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
     {
       printf ("\nSucesso - Optimal = %d\n", optimal);
       show (originalpopulacao[0], 11);
+      return 1;
     }
 
 
@@ -294,13 +301,16 @@ aleatorioSemRep(int *vet, int size, int edge)
 {
   /* Recebe um vetor e preeche com inteiros aleatorios sem repeticao */
   int i, r, size2 = 0;
-  for (i = 0; i < size; ++i) {
-    do {
-      r = rand()%edge;
-    } while (contido(vet, r, size2));
-    vet[i] = r;
-    ++size2;
-  }
+  for (i = 0; i < size; ++i) 
+    {
+      do
+	{
+	  r = rand()%edge;
+	} 
+      while (contido (vet, r, size2) >= 0);
+      vet[i] = r;
+      ++size2;
+    }
 }
 
 int
@@ -309,11 +319,11 @@ contido (int* vet, int element, int size)
   int i = 0;
   while (i < size) {
     if (vet[i] == element) {
-      return 1;
+      return i;
     }
     ++i;
   }
-  return 0;
+  return -1;
 }
 
 void copy (int* destino, int* origem, int size) {
@@ -334,7 +344,7 @@ initMap (char* A, char* B, char* C)
   strcat (map, B);
   strcat (map, C);
   map = compact (map);
-
+  //printf ("\nmap = %s", map);
   return map;
 }
 
@@ -358,6 +368,48 @@ funcAvaliacao (int* vet)
   /* printf("\n100000 - abs(c - a + b) = %d\n", notaMaxima - abs(C - (A + B))); */
   return notaMaxima - abs(C - (A + B));
 }
+
+int
+aval (int* vet, char* mapa, char *strA, char *strB, char *strC) 
+{
+  int A = 0;
+  int B = 0;
+  int C = 0;
+  int i, j, k;
+  int mapasize;
+
+  mapasize = strlen (mapa);
+
+  for (i = strlen (strA) - 1, j = 0; i >= 0; --i, ++j) 
+    {
+      k = 0;
+      while (mapa[k] != strA[i]) { ++k; }
+      A += vet[k] * pow (10, j);
+    }
+
+  for (i = strlen (strB) - 1, j = 0; i >= 0; --i, ++j) 
+    {
+      k = 0;
+      while (mapa[k] != strB[i]) { ++k; }
+      B += vet[k] * pow (10, j);
+    }
+
+  for (i = strlen (strC) - 1, j = 0; i >= 0; --i, ++j) 
+    {
+      k = 0;
+      while (mapa[k] != strC[i]) { ++k; }
+      C += vet[k] * pow (10, j);
+    }
+
+  /* if (A + B == C) { */
+  /*   printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n"); */
+  /* } */
+  /* printf("\nc = %d, a = %d, b = %d", C, A, B); */
+  /* printf("\nc - a + b = %d", abs(C - (A + B))); */
+  /* printf("\n100000 - abs(c - a + b) = %d\n", notaMaxima - abs(C - (A + B))); */
+  return notaMaxima - abs(C - (A + B));
+}
+
 
 int
 roleta (int** populacao, int popSize, int col, int base, int value) 
@@ -569,13 +621,14 @@ norep (int **pop, int size, int domain, int it)
     {
       for (j = 0; j < domain - 1; ++j) 
 	{
-	  if(contido (&pop[i][1+j], pop[i][j], domain - j - 1)) {
-	    printf ("\nnewpopsize = %d", size);
-	    printf ("\nlinha %d", i);
-	    printf ("\nit = %d", it);
-	    show (pop[i], 12);
-	    getchar ();
-	  }
+	  if (contido (&pop[i][1+j], pop[i][j], domain - j - 1) >= 0) 
+	    {
+	      printf ("\nnewpopsize = %d", size);
+	      printf ("\nlinha %d", i);
+	      printf ("\nit = %d", it);
+	      show (pop[i], 12);
+	      getchar ();
+	    }
 	}
     }
 }
@@ -584,13 +637,15 @@ void
 noreplin (int *pop, int domain, int it) 
 {
   int j,i;
-  for (j = 0; j < domain - 1; ++j) {
-    if(contido(&pop[1+j], pop[j],domain - j - 1)) {
-      printf("\nit = %d", it);
-      show(pop, 10);
-      getchar();
+  for (j = 0; j < domain - 1; ++j) 
+    {
+      if (contido (&pop[1+j], pop[j], domain - j - 1) >= 0) 
+	{
+	  printf ("\nit = %d", it);
+	  show (pop, 10);
+	  getchar ();
+	}
     }
-  }
 
 }
 
@@ -645,9 +700,12 @@ compact (char *str)
   int  len = strlen(str);
   int  alphabet[26];
   int  find, i=0, j=0;
-  char temp[len];
+  char temp[len + 1];
   char *temp2;
 
+  for (i = 0; i < 26; ++i) { alphabet[i] = 0; }
+
+  i = 0;
   while (str[i] != '\0')
     {
       find = str[i] - 'a';
@@ -655,14 +713,13 @@ compact (char *str)
       if (alphabet[find] != 1)
 	{
 	  alphabet[find] = 1;
-	  temp[j] = str[i];
-	  j++;
+	  temp[j++] = str[i];
 	}
 
       i++;
     }
 
-  temp2 = (char *) malloc (sizeof (char) * j);
+  temp2 = (char *) malloc (sizeof (char) * j + 1);
 
   for (i = 0; i < j; i++)
     {
