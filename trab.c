@@ -10,7 +10,6 @@ int    aleatorioSemRep (int *vet, int size, int edge);
 /* gera individuo aleatorio, sem repeticao de inteiros */
 int    funcAvaliacao (int *vet);                  
 void   show (int *vet, int size);
-void   showinv (int *vet, int size);
 int    contido (int *vet, int element, int size);  
 void   copy (int *destino, int *origem, int size);
 void   norep (int **pop, int size, int domain,int it);
@@ -33,12 +32,16 @@ int alggen (int popSize, int numero_geracoes, float crossoverrate, float mutatio
 
 
 int
-main() 
+main (int argc, char **argv) 
 {
 
-  int   popSize = 50, geracoes = 100;
-  float pcross = .6, pmut = .1;;
-  int   sucesso, semente = -1;
+  int   popSize      = 50;
+  int   geracoes     = 100;
+  float pcross       = 0.6;
+  float pmut         = 0.1;;
+  int   sucesso      = 0;
+  int   nro_de_execs = 1000;
+  int   semente      = -1;
   int   S, C, R;
   float convergencia[8];
 
@@ -47,25 +50,37 @@ main()
   char  fraseB[] = "more";
   char  fraseC[] = "money";
 
-  int i, j;
+  int i;
+  int j = 0;
 
-  j = sucesso = 0;
-
-  alggen (popSize, geracoes, pcross, pmut, 2, 2, 1, semente);
-  /* for (R = 1; R <= 2; M++) { */
-  /*   for (C = 1; C <= 2; C++) { */
-  /*     for (S = 1; S <= 2; S++) { */
-  /* 	for (i = 0; i < 1000; ++i) { */
-  /* 	  if ( ag(popSize, geracoes, pcross, pmut, S, C, R, semente) ) { */
-  /* 	    ++sucesso; */
-  /* 	  } */
-  /* 	} */
-  /* 	convergencia[j++] = ((float) sucesso) / nro_de_execs; */
-  /* 	sucesso = 0; */
-  /*     } */
-  /*   } */
-  /* } */
-
+  if (argc == 4) 
+    {
+      S = atoi(argv[1]);
+      C = atoi(argv[2]);
+      R = atoi(argv[3]);
+      alggen (popSize, geracoes, pcross, pmut, S, C, R, semente);
+    }
+  else 
+    {
+      for (R = 1; R <= 2; R++) 
+	{
+	  for (C = 1; C <= 2; C++)
+	    {
+	      for (S = 1; S <= 2; S++) 
+		{
+		  for (i = 0; i < nro_de_execs; ++i) 
+		    {
+		      if ( alggen (popSize, geracoes, pcross, pmut, S, C, R, semente) ) 
+			{
+			  ++sucesso;
+			}
+		    }
+		  convergencia[j++] = ((float) sucesso) / nro_de_execs;
+		  sucesso = 0;
+		}
+	    }
+	}
+    }
   return 0;
 }
 
@@ -259,14 +274,15 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
 
     }
 
-  for (i = popSize - 1; i >= 0; --i) {
-    show (originalpopulacao[i], 12);
-  }
+  /* for (i = popSize - 1; i >= 0; --i) { */
+  /*   show (originalpopulacao[i], 12); */
+  /* } */
 
 
   if (optimal >= 0) 
     {
       printf ("\nSucesso - Optimal = %d\n", optimal);
+      show (originalpopulacao[0], 11);
     }
 
 
@@ -334,9 +350,9 @@ funcAvaliacao (int* vet)
   B =  vet[4] * 1000 + vet[5] * 100 + vet[6] * 10 + vet[1];
   C =  vet[4] * 10000 + vet[5] * 1000 + vet[2] * 100 + vet[1] * 10 + vet[7];
 
-  if (A + B == C) {
-    printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n");
-  }
+  /* if (A + B == C) { */
+  /*   printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n"); */
+  /* } */
   /* printf("\nc = %d, a = %d, b = %d", C, A, B); */
   /* printf("\nc - a + b = %d", abs(C - (A + B))); */
   /* printf("\n100000 - abs(c - a + b) = %d\n", notaMaxima - abs(C - (A + B))); */
@@ -404,17 +420,6 @@ show (int *vet, int size)
   putchar('\n');
 }
 
-void
-showinv (int *vet, int size) 
-{
-  int i;
-  putchar('\n');
-  for (i = size-1; i >=0; --i) {
-    printf ("%d ", vet[i]);
-  }
-
-}
-
 int** 
 geraPop (int individual_size, int populacao_size) 
 {
@@ -430,7 +435,7 @@ geraPop (int individual_size, int populacao_size)
 }
 
 void
-ptoSimples(int** newpopulacao, int it, int** originalpopulacao, int pai1, int pai2) 
+ptoSimples (int **newpopulacao, int it, int **originalpopulacao, int pai1, int pai2) 
 {
   int i, corte = rand() % 10;
   it *= 2;
@@ -445,7 +450,7 @@ ptoSimples(int** newpopulacao, int it, int** originalpopulacao, int pai1, int pa
 }
 
 void
-mutation(int** newpopulacao, int newpopSize, float mutationrate) 
+mutation (int **newpopulacao, int newpopSize, float mutationrate) 
 {
   int i, aux, qtd = (int) (newpopSize * mutationrate);
   int rnd, rnd1, rnd2;
@@ -463,7 +468,8 @@ mutation(int** newpopulacao, int newpopSize, float mutationrate)
 }
 
 void
-pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it) {
+pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it) 
+{
 
   int r1 = rand () % vector_size;
   int r2 = rand () % vector_size;
