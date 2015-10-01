@@ -31,6 +31,11 @@ void pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it)
 void mutation (int **newpopulacao, int newpopSize, float mutationrate);
 int  **reinsercao_ordenada (int **originalpopulacao, int popSize, 
 			    int **newpopulacao, int newpopSize, int *optimal);
+
+int  **reinsercao_pura_elitismo (int **originalpopulacao, int popSize, 
+				 int **newpopulacao, int newpopSize, 
+				 int *optimal, float percentual);
+
 int  alggen (int popSize, int numero_geracoes, float crossoverrate, 
 	     float mutationrate, int S, int C, int R, char *strA, 
 	     char *strB, char *strC, int semente);
@@ -208,17 +213,19 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
 
       if (R == 1)
 	{
-	  originalpopulacao = reinsercao_ordenada (originalpopulacao, popSize,
-						   newpopulacao, newpopSize, 
-						   &optimal);
+	  originalpopulacao = reinsercao_ordenada (originalpopulacao, 
+						   popSize, newpopulacao, 
+						   newpopSize, &optimal);
 	}
       else if (R == 2)
 	{
-	  //reinsercao_pura_elistismo ();
+	  originalpopulacao = reinsercao_pura_elitismo (originalpopulacao, 
+							popSize, newpopulacao, 
+							newpopSize, &optimal, .2);
 	}
       else 
 	{
-	  printf ("\nArgumento invalido!\n");
+	  printf ("\nArgumento de Reinsercao Invalido!\n");
 	  getchar ();
 	  exit(1);
 	};
@@ -651,9 +658,9 @@ compact (char *str)
   return temp2;
 }
 
-int **
-reinsercao_ordenada (int **originalpopulacao, int popSize, int **newpopulacao,
-		     int newpopSize, int* optimal)
+
+int **reinsercao_ordenada (int **originalpopulacao, int popSize, int **newpopulacao,
+			   int newpopSize, int* optimal)
 {
   int valor_maior = -1;
   int maior = 0;
@@ -694,7 +701,6 @@ reinsercao_ordenada (int **originalpopulacao, int popSize, int **newpopulacao,
 	    {
 	      *optimal = i;
 	    }
-	  
 	}
 
       else 
@@ -707,18 +713,58 @@ reinsercao_ordenada (int **originalpopulacao, int popSize, int **newpopulacao,
 	      *optimal = i;
 	    }
 	}
-      /* printf("\nSEL2 i\n"); */
-      /* noreplin(temp[i] , 10, i); */
     }
 
-  for (i = 0; i < popSize; ++i) 
-    {
-      free (originalpopulacao[i]);
-      //free (newpopulacao[i]);
-    }
+  for (i = 0; i < popSize; ++i) { free (originalpopulacao[i]); }
 
   free (originalpopulacao);
-  //free (newpopulacao);
+
+  return temp;
+}
+
+int **
+reinsercao_pura_elitismo (int **originalpopulacao, int popSize, int **newpopulacao,
+			  int newpopSize, int* optimal, float percentual)
+{
+  int valor_maior = -1;
+  int maior = 0;
+  int pais0filhos1 = 0;
+  int x, y, i, j;
+  int **temp;
+
+  temp = geraPop (10, popSize);
+  j = 0;
+
+  for (i = 0; i < percentual * popSize; ++i) 
+    {
+      
+      for (x = 0; x < popSize; ++x) 
+	{
+	  if (originalpopulacao[x][10] > valor_maior) 
+	    {
+	      maior = x;
+	      valor_maior = originalpopulacao[maior][10];
+	    }
+	}
+
+      copy (temp[i], originalpopulacao[maior], 12);
+      originalpopulacao[maior][10] = -1;
+      valor_maior = -1;
+
+      if (temp[i][10] == notaMaxima) { *optimal = i; }
+	  
+    }
+
+  while (i < popSize)
+    {
+      copy (temp[i], originalpopulacao[maior], 12);
+      if (temp[i][10] == notaMaxima) { *optimal = i; }
+      ++i;
+    }
+
+  for (i = 0; i < popSize; ++i) { free (originalpopulacao[i]); }
+
+  free (originalpopulacao);
 
   return temp;
 }
