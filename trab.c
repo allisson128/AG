@@ -7,31 +7,33 @@
 #define notaMaxima 100000
 
 // Auxiliares 
-int    aleatorioSemRep (int *vet, int size, int edge);   
-/* gera individuo aleatorio, sem repeticao de inteiros */
-int    funcAvaliacao (int *vet);                  
-int    aval (int *vet, char *mapa, char *strA, char *strB, char *strC);
-void   show (int *vet, int size);
-int    contido (int *vet, int element, int size);  
-void   copy (int *destino, int *origem, int size);
-void   norep (int **pop, int size, int domain,int it);
-void   noreplin (int *pop, int domain, int it);
-char  *initMap (char *A, char *B, char *C); 
-void   insereMapa (char* strconcat, int **pop, int linha);
-char  *compact(char *str);
+int   aleatorioSemRep (int *vet, int size, int edge);   
+int   aval (int *vet, char *mapa, char *strA, char *strB, char *strC);
+void  show (int *vet, int size);
+int   contido (int *vet, int element, int size);  
+void  copy (int *destino, int *origem, int size);
+void  norep (int **pop, int size, int domain,int it);
+void  noreplin (int *pop, int domain, int it);
+char *initMap (char *A, char *B, char *C); 
+void  insereMapa (char* strconcat, int **pop, int linha);
+char *compact (char *str);
 
 // AG
 int  **geraPop (int individual_size, int populacao_size);
-int    roleta (int **populacao, int popSize, int col, int base, int value);
-int    torneio (int **populacao, int popSize, int tour);
-void   ptoSimples (int **newpopulacao, int it, int **originalpopulacao, int pai1, int pai2);
-void   ciclico (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it);
-void   pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it);
-void   mutation (int **newpopulacao, int newpopSize, float mutationrate);
-
-
-int alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, 
-	    int S, int C, int M, char *strA, char *strB, char *strC, int semente);
+int  roleta (int **populacao, int popSize, int col, int base, int value);
+int  torneio (int **populacao, int popSize, int tour, char *mapa, char *A, 
+	      char *B, char *C);
+void ptoSimples (int **newpopulacao, int **originalpopulacao, int it, 
+		 int pai1, int pai2);
+void ciclico (int **pais, int pai1, int pai2, int vector_size, int **filhos, 
+	      int it);
+void pmx (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it);
+void mutation (int **newpopulacao, int newpopSize, float mutationrate);
+int  **reinsercao_ordenada (int **originalpopulacao, int popSize, 
+			    int **newpopulacao, int newpopSize, int *optimal);
+int  alggen (int popSize, int numero_geracoes, float crossoverrate, 
+	     float mutationrate, int S, int C, int R, char *strA, 
+	     char *strB, char *strC, int semente);
 
 
 int
@@ -46,7 +48,7 @@ main (int argc, char **argv)
   int   nro_de_execs = 1000;
   int   semente      = -1;
   int   S, C, R;
-  float convergencia[8];
+  float convergencia[12];
 
   char *mapa;
   char  fraseA[] = "coca";
@@ -69,7 +71,7 @@ main (int argc, char **argv)
 	{
 	  for (C = 1; C <= 2; C++)
 	    {
-	      for (S = 1; S <= 2; S++) 
+	      for (S = 1; S <= 3; S++) 
 		{
 		  for (i = 0; i < nro_de_execs; ++i) 
 		    {
@@ -91,7 +93,7 @@ main (int argc, char **argv)
 
 
 int 
-alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int M, char *strA, char *strB, char *strC, int semente) 
+alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrate, int S, int C, int R, char *strA, char *strB, char *strC, int semente) 
 {
 
   int   **originalpopulacao, **newpopulacao, newpopSize;
@@ -102,7 +104,6 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
   int   **temp;
   int   base;
   int   pai1, pai2;
-  int   x, y, valor_maior, maior, matrix;
   char  *mapa;
 
   newpopSize = popSize * crossoverrate;
@@ -150,8 +151,6 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
       for (it = 0; it < (newpopSize / 2); ++it) 
 	{
 
-	  /* printf("\nTOPO it\n"); */
-	  /* norep(originalpopulacao , popSize, 10, it); */
 	  //*************************** SELECAO ******************************
 	  if (S == 1) 
 	    {
@@ -164,14 +163,17 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
 	      // Torneio Simples
 	      tour = (S == 2) ? 3 : 2;
 
-	      pai1 = torneio (originalpopulacao, popSize, tour);
-	      /* show(originalpopulacao[pai1],10); */
-	      pai2 = torneio (originalpopulacao, popSize, tour);
-	      /* show(originalpopulacao[pai2],10); */
+	      pai1 = torneio (originalpopulacao, popSize, tour, mapa, 
+			      strA, strB, strC);
+	      pai2 = torneio (originalpopulacao, popSize, tour, mapa,
+			      strA, strB, strC);
 	    }
-	  //******************************************************************
-	  /* printf("\n%d",pai1); */
-	  /* printf("\n%d",pai2); */
+	  else
+	    {
+	      printf ("\nErro na Selecao! Entrada invalida.\n");
+	      getchar ();
+	      exit (1);
+	    }
 
 	  /*************************** CROSSOVER ******************************/
 	  //Ciclico
@@ -184,105 +186,43 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
 	    {
 	      pmx (originalpopulacao, pai1, pai2, nrocromossomos, newpopulacao, it);
 	    }
-	  /* printf("\npai\n"); */
-	  /* noreplin(originalpopulacao[pai1], 10, it); */
-	  /* noreplin(originalpopulacao[pai2] , 10, it); */
-	  /* printf("\nCross i\n"); */
-	  /* noreplin(newpopulacao[2*it], 10, it); */
-	  /* noreplin(newpopulacao[2*it + 1] , 10, it); */
-	  /********************************************************************/
-
-	  /* show(originalpopulacao[pai1], 10); */
-	  /* show(originalpopulacao[pai2], 10); */
-	  /* putchar('\n'); */
-	  /* show(newpopulacao[2*it], 10); */
-	  /* show(newpopulacao[2*it+1], 10); */
-	  /* putchar('\n'); */
-	  /* getchar(); */
 	}
 		
       /*************************** MUTACAO ******************************/
       mutation(newpopulacao, newpopSize, mutationrate);
-      /******************************************************************/
-      /* printf("\nPERMUT j\n"); */
-      /* for (i = 0; i < newpopSize; ++i)  */
-      /* 	{ */
-      /* 	  show(newpopulacao[i], 12); */
-      /* 	} */
+
       norep (newpopulacao, newpopSize, 10, j);
 
       /***** AVALIA os novos indiv. apos Crossover e Mutacao ************/
       acc = 0;
-      for (i = 0; i < newpopSize; ++i) {
-	acc += newpopulacao[i][10] = aval (newpopulacao[i], mapa, strA, strB, strC);
-	newpopulacao[i][11] = acc;
-	/* show(newpopulacao[i], 12); */
-      }
+
+      for (i = 0; i < newpopSize; ++i) 
+	{
+	  acc += newpopulacao[i][10] = aval (newpopulacao[i], mapa, strA, strB, strC);
+	  newpopulacao[i][11] = acc;
+	}
       /******************************************************************/
 
 
-      /****** SELECIONA os melhores indiv. dentre os pais e filhos ******/
+      /****************** REINSERCAO ************************************/
 
-      temp = geraPop(nrocromossomos, popSize);
-
-      valor_maior = -1;
-      maior = 0, matrix = 0;
-      for(i = 0; i < popSize; i++) {
-
-	for(x = 0; x < popSize; ++x) {
-	  if(originalpopulacao[x][10] > valor_maior) {
-	    maior = x;
-	    matrix = 0;
-	    valor_maior = originalpopulacao[maior][10];
-	  }
+      if (R == 1)
+	{
+	  originalpopulacao = reinsercao_ordenada (originalpopulacao, popSize,
+						   newpopulacao, newpopSize, 
+						   &optimal);
 	}
-
-	for(y = 0; y < newpopSize; ++y) {
-	  if(newpopulacao[y][10] > valor_maior){
-	    maior = y;
-	    matrix = 1;
-	    valor_maior = newpopulacao[y][10];
-	  }
+      else if (R == 2)
+	{
+	  //reinsercao_pura_elistismo ();
 	}
-
-	if (matrix) {
-	  copy(temp[i], newpopulacao[maior], 12);
-	  newpopulacao[maior][10] = -1;
-	  valor_maior = -1;
-	  if (temp[i][10] == notaMaxima) {
-	    optimal = i;
-	  }
-
-	}
-	else {
-	  copy(temp[i], originalpopulacao[maior], 12);
-	  originalpopulacao[maior][10] = -1;
-	  valor_maior = -1;
-	  if (temp[i][10] == notaMaxima) {
-	    optimal = i;
-	  }
-
-	}
-	/* printf("\nSEL2 i\n"); */
-	/* noreplin(temp[i] , 10, i); */
-
-      }
-      /****************************************************************/
-      for (i = 0; i < nrocromossomos; ++i) {
-	free(originalpopulacao[i]);
-      }
-      free(originalpopulacao);
-      originalpopulacao = temp;
-
-      /* printf("\nBOT j\n"); */
-      /* norep(originalpopulacao , popSize, 10, j); */
-
+      else 
+	{
+	  printf ("\nArgumento invalido!\n");
+	  getchar ();
+	  exit(1);
+	};
     }
-
-  /* for (i = popSize - 1; i >= 0; --i) { */
-  /*   show (originalpopulacao[i], 12); */
-  /* } */
-
 
   if (optimal >= 0) 
     {
@@ -345,27 +285,6 @@ initMap (char* A, char* B, char* C)
   map = compact (map);
   //printf ("\nmap = %s", map);
   return map;
-}
-
-int
-funcAvaliacao (int* vet) 
-//funcAvaliacao (int* vet, int** population, int mapline) 
-{
-  /* *********** */
-  /* IMPROVISADA */
-  /* *********** */
-  int A, B, C;
-  A =  vet[0] * 1000 + vet[1] * 100 + vet[2] * 10 + vet[3];
-  B =  vet[4] * 1000 + vet[5] * 100 + vet[6] * 10 + vet[1];
-  C =  vet[4] * 10000 + vet[5] * 1000 + vet[2] * 100 + vet[1] * 10 + vet[7];
-
-  /* if (A + B == C) { */
-  /*   printf("\n\n!!! ENCONTROU !!!\nSend + More = Money\n\n"); */
-  /* } */
-  /* printf("\nc = %d, a = %d, b = %d", C, A, B); */
-  /* printf("\nc - a + b = %d", abs(C - (A + B))); */
-  /* printf("\n100000 - abs(c - a + b) = %d\n", notaMaxima - abs(C - (A + B))); */
-  return notaMaxima - abs(C - (A + B));
 }
 
 int
@@ -436,7 +355,8 @@ roleta (int** populacao, int popSize, int col, int base, int value)
 }
 
 int
-torneio (int** populacao, int popSize, int tour) 
+torneio (int **populacao, int popSize, int tour,
+	 char *mapa, char *A, char *B, char *C)
 {
   
   int* candidates = (int *) malloc (tour * sizeof (int));
@@ -444,7 +364,7 @@ torneio (int** populacao, int popSize, int tour)
 
   for (i = 0; i < tour; ++i) {
     candidates[i] = rand() % popSize;
-    grade = funcAvaliacao (populacao[candidates[i]]);
+    grade = aval (populacao[candidates[i]], mapa, A, B, C);
     /* printf("\ni = %d", i); */
     /* show(populacao[candidates[i]],10); */
     /* printf("\ncandidates[i] = %d", candidates[i]); */
@@ -486,7 +406,7 @@ geraPop (int individual_size, int populacao_size)
 }
 
 void
-ptoSimples (int **newpopulacao, int it, int **originalpopulacao, int pai1, int pai2) 
+ptoSimples (int **newpopulacao, int **originalpopulacao, int it, int pai1, int pai2) 
 {
   int i, corte = rand() % 10;
   it *= 2;
@@ -649,34 +569,35 @@ noreplin (int *pop, int domain, int it)
 }
 
 void
-ciclico(int** pais, int pai1, int pai2, int vector_size, int** filhos, int it) 
+ciclico (int **pais, int pai1, int pai2, int vector_size, int **filhos, int it)
 {
 
   int r = rand() % vector_size;
   int ref, i, j, k, aux,prox;
   int trocas[vector_size];
   int trocas_size = 0;
-  it *= 2;
 
+  it *= 2;
   copy(filhos[it], pais[pai1], 12);
   copy(filhos[it + 1], pais[pai2], 12);
 
   prox = ref = filhos[it][0];
 
-  do {
-    for (i = 0; i < vector_size; ++i) {
-      if (filhos[it][i] == prox) {
-
-	prox = filhos[it + 1][i];
-
-	aux = filhos[it][i];
-	filhos[it][i] = filhos[it + 1][i];
-	filhos[it + 1][i] = aux;
-
-	break;
-      }
-    }
-  } while (prox != ref); 
+  do 
+    {
+      for (i = 0; i < vector_size; ++i) 
+	{
+	  if (filhos[it][i] == prox) 
+	    {
+	      prox = filhos[it + 1][i];
+	      aux = filhos[it][i];
+	      filhos[it][i] = filhos[it + 1][i];
+	      filhos[it + 1][i] = aux;
+	      break;
+	    }
+	}
+    } 
+  while (prox != ref); 
 
 }
 
@@ -705,6 +626,7 @@ compact (char *str)
   for (i = 0; i < 26; ++i) { alphabet[i] = 0; }
 
   i = 0;
+
   while (str[i] != '\0')
     {
       find = str[i] - 'a';
@@ -714,7 +636,6 @@ compact (char *str)
 	  alphabet[find] = 1;
 	  temp[j++] = str[i];
 	}
-
       i++;
     }
 
@@ -728,4 +649,76 @@ compact (char *str)
   temp2[j] = '\0';
 
   return temp2;
+}
+
+int **
+reinsercao_ordenada (int **originalpopulacao, int popSize, int **newpopulacao,
+		     int newpopSize, int* optimal)
+{
+  int valor_maior = -1;
+  int maior = 0;
+  int pais0filhos1 = 0;
+  int x, y, i;
+  int **temp;
+
+  temp = geraPop (10, popSize);
+
+  for (i = 0; i < popSize; i++) 
+    {
+      for (x = 0; x < popSize; ++x) 
+	{
+	  if (originalpopulacao[x][10] > valor_maior) 
+	    {
+	      maior = x;
+	      pais0filhos1 = 0;
+	      valor_maior = originalpopulacao[maior][10];
+	    }
+	}
+
+      for (y = 0; y < newpopSize; ++y) 
+	{
+	  if (newpopulacao[y][10] > valor_maior)
+	    {
+	      maior = y;
+	      pais0filhos1 = 1;
+	      valor_maior = newpopulacao[y][10];
+	    }
+	}
+
+      if (pais0filhos1) 
+	{
+	  copy (temp[i], newpopulacao[maior], 12);
+	  newpopulacao[maior][10] = -1;
+	  valor_maior = -1;
+	  if (temp[i][10] == notaMaxima) 
+	    {
+	      *optimal = i;
+	    }
+	  
+	}
+
+      else 
+	{
+	  copy (temp[i], originalpopulacao[maior], 12);
+	  originalpopulacao[maior][10] = -1;
+	  valor_maior = -1;
+	  if (temp[i][10] == notaMaxima) 
+	    {
+	      *optimal = i;
+	    }
+	}
+      /* printf("\nSEL2 i\n"); */
+      /* noreplin(temp[i] , 10, i); */
+    }
+
+  for (i = 0; i < popSize; ++i) 
+    {
+      free (originalpopulacao[i]);
+      //free (newpopulacao[i]);
+    }
+
+  free (originalpopulacao);
+  //free (newpopulacao);
+
+  return temp;
 }
