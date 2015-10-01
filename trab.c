@@ -277,7 +277,6 @@ alggen (int popSize, int numero_geracoes, float crossoverrate, float mutationrat
       /* printf("\nBOT j\n"); */
       /* norep(originalpopulacao , popSize, 10, j); */
 
-
     }
 
   /* for (i = popSize - 1; i >= 0; --i) { */
